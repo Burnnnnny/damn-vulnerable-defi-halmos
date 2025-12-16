@@ -1,5 +1,7 @@
 # Halmos vs Damn Vulnerable DeFi
 
+이 문서는 [igorganich](https://github.com/igorganich)님께서 작성하신 [damn-vulnerable-defi-halmos](https://github.com/igorganich/damn-vulnerable-defi-halmos) 레포지토리를 gemini3.0으로 번역한 문서입니다.
+
 Halmos vs Damn Vulnerable DeFi는 Halmos 심볼릭 분석기를 사용하여 Damn Vulnerable DeFi CTF를 해결하는 방법에 관한 기사 시리즈입니다.
 
 theredguild가 완전히 foundry 기반 테스트로 마이그레이션된 Damn Vulnerable Defi v4를 출시했기 때문에, 이러한 문제들을 해결하는 데 Halmos를 사용하는 것이 매우 편리해졌습니다.
