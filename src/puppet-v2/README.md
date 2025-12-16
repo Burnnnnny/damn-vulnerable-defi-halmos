@@ -1,9 +1,9 @@
 # Puppet V2
 
-The developers of the [previous pool](https://damnvulnerabledefi.xyz/challenges/puppet/) seem to have learned the lesson. And released a new version.
+[이전 풀](https://damnvulnerabledefi.xyz/challenges/puppet/)의 개발자들은 교훈을 얻은 것 같습니다. 그래서 새로운 버전을 출시했습니다.
 
-Now they’re using a Uniswap v2 exchange as a price oracle, along with the recommended utility libraries. Shouldn't that be enough?
+이제 그들은 Uniswap v2 거래소를 가격 오라클로 사용하며 권장 유틸리티 라이브러리도 함께 사용합니다. 그 정도면 충분하지 않을까요?
 
-You start with 20 ETH and 10000 DVT tokens in balance. The pool has a million DVT tokens in balance at risk!
+당신은 20 ETH와 10,000 DVT 토큰 잔액으로 시작합니다. 풀에는 100만 DVT 토큰이 위험에 처해 있습니다!
 
-Save all funds from the pool, depositing them into the designated recovery account.
+풀에서 모든 자금을 구하여 지정된 복구 계정으로 입금하십시오.

@@ -1,16 +1,15 @@
 # Wallet Mining
 
-There’s a contract that incentivizes users to deploy Safe wallets, rewarding them with 1 DVT. It integrates with an upgradeable authorization mechanism, only allowing certain deployers (a.k.a. wards) to be paid for specific deployments.
+사용자에게 Safe 지갑을 배포하도록 장려하고 보상으로 1 DVT를 제공하는 계약이 있습니다. 이는 업그레이드 가능한 권한 부여 메커니즘과 통합되어 특정 배포자(일명 와드, wards)만이 특정 배포에 대해 보상을 받을 수 있도록 허용합니다.
 
-The deployer contract only works with a Safe factory and copy set during deployment. It looks like the [Safe singleton factory](https://github.com/safe-global/safe-singleton-factory) is already deployed.
+배포자 계약은 배포 중에 설정된 Safe 팩토리 및 복사본(copy)에서만 작동합니다. [Safe singleton factory](https://github.com/safe-global/safe-singleton-factory)는 이미 배포된 것으로 보입니다.
 
-The team transferred 20 million DVT tokens to a user at `0x8be6a88D3871f793aD5D5e24eF39e1bf5be31d2b`, where her plain 1-of-1 Safe was supposed to land. But they lost the nonce they should use for deployment.
+팀은 2천만 DVT 토큰을 `0x8be6a88D3871f793aD5D5e24eF39e1bf5be31d2b`의 사용자에게 이체했으며, 그곳에 그녀의 일반적인 1-of-1 Safe가 위치해야 했습니다. 그러나 그들은 배포에 사용해야 할 논스(nonce)를 잃어버렸습니다.
 
-To make matters worse, there's been rumours of a vulnerability in the system. The team's freaked out. Nobody knows what to do, let alone the user. She granted you access to her private key.
+설상가상으로 시스템에 취약점이 있다는 소문이 있습니다. 팀은 겁에 질려 있습니다. 사용자는 물론이고 아무도 어떻게 해야 할지 모릅니다. 그녀는 당신에게 자신의 개인 키에 대한 접근 권한을 부여했습니다.
 
-You must save all funds before it's too late!
+너무 늦기 전에 모든 자금을 구해야 합니다!
 
-Recover all tokens from the wallet deployer contract and send them to the corresponding ward. Also save and return all user's funds.
+지갑 배포자 계약에서 모든 토큰을 회수하여 해당 와드에게 보내십시오. 또한 모든 사용자의 자금을 구하여 반환하십시오.
 
-In a single transaction.
-
+단일 트랜잭션으로 수행해야 합니다.

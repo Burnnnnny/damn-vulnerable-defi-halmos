@@ -1,9 +1,9 @@
 # Selfie
 
-A new lending pool has launched! It’s now offering flash loans of DVT tokens. It even includes a fancy governance mechanism to control it.
+새로운 대출 풀이 출시되었습니다! 이제 DVT 토큰의 플래시 론을 제공합니다. 이를 제어하기 위한 멋진 거버넌스 메커니즘도 포함되어 있습니다.
 
-What could go wrong, right ?
+무슨 문제가 생길 수 있을까요?
 
-You start with no DVT tokens in balance, and the pool has 1.5 million at risk.
+당신은 DVT 토큰 잔액 없이 시작하며, 풀에는 150만 개가 위험에 처해 있습니다.
 
-Rescue all funds from the pool and deposit them into the designated recovery account.
+풀에서 모든 자금을 구출하고 지정된 복구 계정으로 입금하십시오.

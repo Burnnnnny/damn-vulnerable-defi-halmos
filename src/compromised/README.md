@@ -1,6 +1,6 @@
 # Compromised
 
-While poking around a web service of one of the most popular DeFi projects in the space, you get a strange response from the server. Here’s a snippet:
+이 공간에서 가장 인기 있는 DeFi 프로젝트 중 하나의 웹 서비스를 살펴보던 중, 서버로부터 이상한 응답을 받았습니다. 다음은 그 스니펫입니다:
 
 ```
 HTTP/2 200 OK
@@ -14,8 +14,8 @@ server: cloudflare
 4d 48 67 32 4f 47 4a 6b 4d 44 49 77 59 57 51 78 4f 44 5a 69 4e 6a 51 33 59 54 59 35 4d 57 4d 32 59 54 56 6a 4d 47 4d 78 4e 54 49 35 5a 6a 49 78 5a 57 4e 6b 4d 44 6c 6b 59 32 4d 30 4e 54 49 30 4d 54 51 77 4d 6d 46 6a 4e 6a 42 69 59 54 4d 33 4e 32 4d 30 4d 54 55 35
 ```
 
-A related on-chain exchange is selling (absurdly overpriced) collectibles called “DVNFT”, now at 999 ETH each.
+관련된 온체인 거래소에서는 "DVNFT"라고 불리는 (터무니없이 비싼) 수집품을 판매하고 있으며, 현재 가격은 개당 999 ETH입니다.
 
-This price is fetched from an on-chain oracle, based on 3 trusted reporters: `0x188...088`, `0xA41...9D8` and `0xab3...a40`.
+이 가격은 `0x188...088`, `0xA41...9D8`, `0xab3...a40`의 3명의 신뢰할 수 있는 보고자를 기반으로 하는 온체인 오라클에서 가져옵니다.
 
-Starting with just 0.1 ETH in balance, pass the challenge by rescuing all ETH available in the exchange. Then deposit the funds into the designated recovery account.
+잔액이 0.1 ETH만 있는 상태에서 시작하여 거래소에서 사용 가능한 모든 ETH를 구출하여 챌린지를 통과하십시오. 그런 다음 자금을 지정된 복구 계정으로 입금하십시오.

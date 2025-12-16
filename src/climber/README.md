@@ -1,11 +1,11 @@
 # Climber
 
-There’s a secure vault contract guarding 10 million DVT tokens. The vault is upgradeable, following the [UUPS pattern](https://eips.ethereum.org/EIPS/eip-1822).
+1,000만 DVT 토큰을 보호하는 안전한 금고 계약이 있습니다. 이 금고는 [UUPS 패턴](https://eips.ethereum.org/EIPS/eip-1822)을 따르는 업그레이드 가능한 계약입니다.
 
-The owner of the vault is a timelock contract. It can withdraw a limited amount of tokens every 15 days.
+금고의 소유자는 타임락(timelock) 계약입니다. 타임락은 15일마다 제한된 금액의 토큰만 인출할 수 있습니다.
 
-On the vault there’s an additional role with powers to sweep all tokens in case of an emergency.
+금고에는 비상 시 모든 토큰을 쓸어담을 수 있는 권한을 가진 추가 역할이 있습니다.
 
-On the timelock, only an account with a “Proposer” role can schedule actions that can be executed 1 hour later.
+타임락에서는 "Proposer" 역할을 가진 계정만이 1시간 후에 실행될 작업을 예약할 수 있습니다.
 
-You must rescue all tokens from the vault and deposit them into the designated recovery account.
+금고에서 모든 토큰을 구출하여 지정된 복구 계정으로 입금해야 합니다.

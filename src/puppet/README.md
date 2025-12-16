@@ -1,7 +1,7 @@
 # Puppet
 
-There’s a lending pool where users can borrow Damn Valuable Tokens (DVTs). To do so, they first need to deposit twice the borrow amount in ETH as collateral. The pool currently has 100000 DVTs in liquidity.
+사용자가 Damn Valuable Token (DVT)을 빌릴 수 있는 대출 풀이 있습니다. 그렇게 하려면 먼저 대출 금액의 두 배에 해당하는 ETH를 담보로 예치해야 합니다. 풀에는 현재 100,000 DVT의 유동성이 있습니다.
 
-There’s a DVT market opened in an old Uniswap v1 exchange, currently with 10 ETH and 10 DVT in liquidity.
+오래된 Uniswap v1 거래소에 DVT 시장이 개설되어 있으며, 현재 유동성은 10 ETH와 10 DVT입니다.
 
-Pass the challenge by saving all tokens from the lending pool, then depositing them into the designated recovery account. You start with 25 ETH and 1000 DVTs in balance.
+대출 풀에서 모든 토큰을 구한 다음 지정된 복구 계정으로 입금하여 챌린지를 통과하십시오. 당신은 25 ETH와 1,000 DVT 잔액으로 시작합니다.

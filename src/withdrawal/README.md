@@ -1,11 +1,11 @@
 # Withdrawal
 
-There's a token bridge to withdraw Damn Valuable Tokens from an L2 to L1. It has a million DVT tokens in balance.
+L2에서 L1으로 Damn Valuable Token을 인출하기 위한 토큰 브리지(token bridge)가 있습니다. 잔액은 100만 DVT 토큰입니다.
 
-The L1 side of the bridge allows anyone to finalize withdrawals, as long as the delay period has passed and they present a valid Merkle proof. The proof must correspond with the latest withdrawals' root set by the bridge owner.
+브리지의 L1 측은 지연 기간이 지나고 유효한 머클 증명(Merkle proof)을 제시하는 한 누구나 인출을 완료할 수 있도록 허용합니다. 증명은 브리지 소유자가 설정한 최신 인출 루트 세트와 일치해야 합니다.
 
-You were given the event logs of 4 withdrawals initiated on L2 in a JSON file. They could be executed on L1 after the 7 days delay.
+당신은 JSON 파일로 L2에서 시작된 4개의 인출 이벤트 로그를 받았습니다. 이들은 7일 지연 후에 L1에서 실행될 수 있습니다.
 
-But there's one suspicious among them, isn't there? You may want to double-check, because all funds might be at risk. Luckily you are a bridge operator with special powers.
+하지만 그중 하나가 의심스럽지 않나요? 모든 자금이 위험에 처할 수 있으므로 다시 확인하고 싶을 것입니다. 다행히 당신은 특별한 권한을 가진 브리지 운영자입니다.
 
-Protect the bridge by finalizing _all_ given withdrawals, preventing the suspicious one from executing, and somehow not draining all funds.
+주어진 _모든_ 인출을 완료하여 브리지를 보호하되, 의심스러운 인출이 실행되는 것을 방지하고, 어떻게든 모든 자금이 유출되지 않도록 하십시오.

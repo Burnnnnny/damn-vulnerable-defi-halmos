@@ -1,13 +1,13 @@
 # Shards
 
-The Shards NFT marketplace is a permissionless smart contract enabling holders of Damn Valuable NFTs to sell them at any price (expressed in USDC).
+Shards NFT 마켓플레이스는 Damn Valuable NFT 보유자가 어떤 가격으로든(USDC로 표시) 판매할 수 있게 하는 무허가 스마트 계약입니다.
 
-These NFTs could be so damn valuable that sellers can offer them in smaller fractions ("shards"). Buyers can buy these shards, represented by an ERC1155 token. The marketplace only pays the seller once the whole NFT is sold.
+이 NFT들은 너무나 가치가 있어서 판매자는 더 작은 조각("shards")으로 나누어 제공할 수 있습니다. 구매자는 ERC1155 토큰으로 표시되는 이 조각들을 구매할 수 있습니다. 마켓플레이스는 전체 NFT가 판매된 경우에만 판매자에게 대금을 지급합니다.
 
-The marketplace charges sellers a 1% fee in Damn Valuable Tokens (DVT). These can be stored in a secure on-chain vault, which in turn integrates with a DVT staking system.
+마켓플레이스는 판매자에게 1%의 수수료를 Damn Valuable Token (DVT)으로 청구합니다. 이는 안전한 온체인 금고에 저장되며, 이 금고는 다시 DVT 스테이킹 시스템과 통합됩니다.
 
-Somebody is selling one NFT for... wow, a million USDC?
+누군가가 NFT 하나를... 와우, 백만 USDC에 팔고 있나요?
 
-You better dig into that marketplace before the degens find out.
+디젠(degens)들이 알아차리기 전에 마켓플레이스를 파헤쳐 보는 게 좋겠습니다.
 
-You start with no DVTs. Rescue as much funds as you can in a single transaction, and deposit the assets into the designated recovery account.
+당신은 DVT 없이 시작합니다. 단일 트랜잭션으로 가능한 한 많은 자금을 구출하고 자산을 지정된 복구 계정으로 입금하십시오.

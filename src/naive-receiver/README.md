@@ -1,7 +1,7 @@
 # Naive Receiver
 
-There’s a pool with 1000 WETH in balance offering flash loans. It has a fixed fee of 1 WETH. The pool supports meta-transactions by integrating with a permissionless forwarder contract. 
+플래시 론(flash loans)을 제공하는 잔액이 1000 WETH인 풀이 있습니다. 수수료는 1 WETH로 고정되어 있습니다. 이 풀은 무허가 전달자(forwarder) 계약과 통합하여 메타 트랜잭션을 지원합니다.
 
-A user deployed a sample contract with 10 WETH in balance. Looks like it can execute flash loans of WETH.
+한 사용자가 10 WETH의 잔액을 가진 샘플 계약을 배포했습니다. 이 계약은 WETH 플래시 론을 실행할 수 있는 것으로 보입니다.
 
-All funds are at risk! Rescue all WETH from the user and the pool, and deposit it into the designated recovery account.
+모든 자금이 위험에 처해 있습니다! 사용자 계정과 풀에서 모든 WETH를 구출하고 지정된 복구 계정으로 입금하십시오.

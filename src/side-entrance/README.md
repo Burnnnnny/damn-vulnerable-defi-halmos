@@ -1,7 +1,7 @@
 # Side Entrance
 
-A surprisingly simple pool allows anyone to deposit ETH, and withdraw it at any point in time.
+놀랍도록 단순한 풀(pool)이 있어 누구나 ETH를 예치하고 언제든지 출금할 수 있습니다.
 
-It has 1000 ETH in balance already, and is offering free flashloans using the deposited ETH to promote their system.
+이미 1000 ETH의 잔액이 있으며, 시스템 홍보를 위해 예치된 ETH를 사용하여 무료 플래시 론을 제공하고 있습니다.
 
-Yoy start with 1 ETH in balance. Pass the challenge by rescuing all ETH from the pool and depositing it in the designated recovery account.
+당신은 1 ETH 잔액으로 시작합니다. 풀에서 모든 ETH를 구출하고 지정된 복구 계정으로 입금하여 챌린지를 통과하십시오.

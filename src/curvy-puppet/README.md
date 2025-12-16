@@ -1,15 +1,15 @@
 # Curvy Puppet
 
-There's a lending contract where anyone can borrow LP tokens from Curve's stETH/ETH pool. To do so, borrowers must first deposit enough Damn Valuable tokens (DVT) as collateral. If a position's borrowed value grows larger than the collateral's value, anyone can liquidate it by repaying the debt and seizing all collateral.
+누구나 Curve의 stETH/ETH 풀에서 LP 토큰을 빌릴 수 있는 대출 계약이 있습니다. 그렇게 하려면 차입자는 먼저 충분한 Damn Valuable Token (DVT)을 담보로 예치해야 합니다. 포지션의 차입 가치가 담보 가치보다 커지면 누구나 부채를 상환하고 모든 담보를 압류하여 청산할 수 있습니다.
 
-The lending contract integrates with [Permit2](https://github.com/Uniswap/permit2) to securely manage token approvals. It also uses a permissioned price oracle to fetch the current prices of ETH and DVT.
+이 대출 계약은 [Permit2](https://github.com/Uniswap/permit2)와 통합되어 토큰 승인을 안전하게 관리합니다. 또한 허가된 가격 오라클을 사용하여 ETH와 DVT의 현재 가격을 가져옵니다.
 
-Alice, Bob and Charlie have opened positions in the lending contract. To be extra safe, they decided to really overcollateralize them.
+Alice, Bob, Charlie는 대출 계약에서 포지션을 열었습니다. 매우 안전하게 하기 위해 그들은 포지션을 과잉 담보(overcollateralize)하기로 결정했습니다.
 
-But are they really safe? That's not what's claimed in the urgent bug report the devs received.
+하지만 정말 안전할까요? 개발자들이 받은 긴급 버그 리포트의 내용은 그렇지 않습니다.
 
-Before user funds are taken, close all positions and save all available collateral.
+사용자 자금이 탈취되기 전에 모든 포지션을 닫고 사용 가능한 모든 담보를 구하십시오.
 
-The devs have offered part of their treasury in case you need it for the operation: 200 WETH and a little over 6 LP tokens. Don't worry about profits, but don't use all their funds. Also, make sure to transfer any rescued assets to the treasury account.
+개발자들은 작업에 필요할 경우를 대비해 200 WETH와 6 LP 토큰이 조금 넘는 자금을 제공했습니다. 수익에 대해서는 걱정하지 말고, 그들의 자금을 전부 사용하지만 마십시오. 또한 구출된 모든 자산을 재무부 계정으로 이체해야 합니다.
 
-_NOTE: this challenge requires a valid RPC URL to fork mainnet state into your local environment._
+_참고: 이 챌린지는 메인넷 상태를 로컬 환경으로 포크하기 위해 유효한 RPC URL이 필요합니다._

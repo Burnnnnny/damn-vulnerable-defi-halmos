@@ -1,7 +1,7 @@
 # Truster
 
-More and more lending pools are offering flashloans. In this case, a new pool has launched that is offering flashloans of DVT tokens for free.
+점점 더 많은 대출 풀들이 플래시 론을 제공하고 있습니다. 이번 경우에는 DVT 토큰의 플래시 론을 무료로 제공하는 새로운 풀이 출시되었습니다.
 
-The pool holds 1 million DVT tokens. You have nothing.
+풀은 100만 DVT 토큰을 보유하고 있습니다. 당신은 가진 게 없습니다.
 
-To pass this challenge, rescue all funds in the pool executing a single transaction. Deposit the funds into the designated recovery account.
+이 챌린지를 통과하려면 단일 트랜잭션을 실행하여 풀의 모든 자금을 구출하십시오. 자금을 지정된 복구 계정으로 입금하십시오.

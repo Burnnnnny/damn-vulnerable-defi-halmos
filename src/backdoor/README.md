@@ -1,9 +1,9 @@
 # Backdoor
 
-To incentivize the creation of more secure wallets in their team, someone has deployed a registry of Safe wallets. When someone in the team deploys and registers a wallet, they earn 10 DVT tokens.
+팀 내에서 더 안전한 지갑 생성을 장려하기 위해 누군가가 Safe 지갑 레지스트리를 배포했습니다. 팀원이 지갑을 배포하고 등록하면 10 DVT 토큰을 얻습니다.
 
-The registry tightly integrates with the legitimate Safe Proxy Factory. It includes strict safety checks.
+이 레지스트리는 합법적인 Safe Proxy Factory와 긴밀하게 통합되어 있습니다. 여기에는 엄격한 안전 검사가 포함되어 있습니다.
 
-Currently there are four people registered as beneficiaries: Alice, Bob, Charlie and David. The registry has 40 DVT tokens in balance to be distributed among them.
+현재 Alice, Bob, Charlie, David 네 명이 수령인으로 등록되어 있습니다. 레지스트리에는 이들에게 분배할 40 DVT 토큰이 잔액으로 남아 있습니다.
 
-Uncover the vulnerability in the registry, rescue all funds, and deposit them into the designated recovery account. In a single transaction.
+레지스트리의 취약점을 발견하고 모든 자금을 구출하여 지정된 복구 계정으로 입금하십시오. 단일 트랜잭션으로 수행해야 합니다.

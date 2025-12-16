@@ -1,9 +1,9 @@
 # ABI Smuggling
 
-There’s a permissioned vault with 1 million DVT tokens deposited. The vault allows withdrawing funds periodically, as well as taking all funds out in case of emergencies.
+1,000만 DVT 토큰이 예치된 허가된 금고(vault)가 있습니다. 이 금고는 주기적으로 자금을 인출하는 것을 허용하며, 비상 시에는 모든 자금을 인출할 수도 있습니다.
 
-The contract has an embedded generic authorization scheme, only allowing known accounts to execute specific actions.
+이 계약에는 내장된 일반 권한 부여 체계가 있어 알려진 계정만 특정 작업을 실행할 수 있습니다.
 
-The dev team has received a responsible disclosure saying all funds can be stolen.
+개발 팀은 모든 자금을 도난당할 수 있다는 책임 있는 공개(responsible disclosure)를 받았습니다.
 
-Rescue all funds from the vault, transferring them to the designated recovery account.
+금고에서 모든 자금을 구출하여 지정된 복구 계정으로 이체하십시오.

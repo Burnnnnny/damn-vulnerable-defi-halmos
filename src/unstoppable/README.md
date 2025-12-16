@@ -1,7 +1,7 @@
 # Unstoppable
 
-There's a tokenized vault with a million DVT tokens deposited. It’s offering flash loans for free, until the grace period ends.
+백만 DVT 토큰이 예치된 토큰화된 금고(tokenized vault)가 있습니다. 유예 기간이 끝날 때까지 무료로 플래시 론을 제공하고 있습니다.
 
-To catch any bugs before going 100% permissionless, the developers decided to run a live beta in testnet. There's a monitoring contract to check liveness of the flashloan feature.
+100% 무허가로 전환하기 전에 버그를 잡기 위해 개발자들은 테스트넷에서 라이브 베타를 실행하기로 결정했습니다. 플래시 론 기능의 활성 상태를 확인하는 모니터링 계약이 있습니다.
 
-Starting with 10 DVT tokens in balance, show that it's possible to halt the vault. It must stop offering flash loans.
+10 DVT 토큰 잔액으로 시작하여 금고를 중단시키는 것이 가능함을 보여주십시오. 금고는 플래시 론 제공을 중단해야 합니다.

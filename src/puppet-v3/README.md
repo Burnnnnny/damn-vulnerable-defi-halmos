@@ -1,11 +1,11 @@
 # Puppet V3
 
-Bear or bull market, true DeFi devs keep building. Remember that lending pool you helped? A new version is out.
+약세장이든 강세장이든, 진정한 DeFi 개발자들은 계속 구축합니다. 당신이 도왔던 그 대출 풀을 기억하시나요? 새 버전이 나왔습니다.
 
-They’re now using Uniswap V3 as an oracle. That’s right, no longer using spot prices! This time the pool queries the time-weighted average price of the asset, with all the recommended libraries.
+이제 그들은 Uniswap V3를 오라클로 사용하고 있습니다. 맞습니다, 더 이상 현물 가격(spot prices)을 사용하지 않습니다! 이번에는 풀이 권장 라이브러리와 함께 자산의 시간 가중 평균 가격(TWAP)을 조회합니다.
 
-The Uniswap market has 100 WETH and 100 DVT in liquidity. The lending pool has a million DVT tokens.
+Uniswap 시장에는 100 WETH와 100 DVT의 유동성이 있습니다. 대출 풀에는 100만 DVT 토큰이 있습니다.
 
-Starting with 1 ETH and some DVT, you must save all from the vulnerable lending pool. Don't forget to send them to the designated recovery account.
+1 ETH와 약간의 DVT로 시작하여 취약한 대출 풀에서 모든 자금을 구해야 합니다. 지정된 복구 계정으로 보내는 것을 잊지 마십시오.
 
-_NOTE: this challenge requires a valid RPC URL to fork mainnet state into your local environment._
+_참고: 이 챌린지는 메인넷 상태를 로컬 환경으로 포크하기 위해 유효한 RPC URL이 필요합니다._

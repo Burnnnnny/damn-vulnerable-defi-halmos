@@ -1,11 +1,11 @@
 # Free Rider
 
-A new marketplace of Damn Valuable NFTs has been released! There’s been an initial mint of 6 NFTs, which are available for sale in the marketplace. Each one at 15 ETH.
+Damn Valuable NFT의 새로운 마켓플레이스가 출시되었습니다! 초기에 6개의 NFT가 발행되었으며, 마켓플레이스에서 판매 중입니다. 각 NFT의 가격은 15 ETH입니다.
 
-A critical vulnerability has been reported, claiming that all tokens can be taken. Yet the developers don't know how to save them!
+모든 토큰을 탈취할 수 있다는 치명적인 취약점이 보고되었습니다. 하지만 개발자들은 토큰을 구하는 방법을 모릅니다!
 
-They’re offering a bounty of 45 ETH for whoever is willing to take the NFTs out and send them their way. The recovery process is managed by a dedicated smart contract.
+그들은 NFT를 꺼내서 자신들에게 보내주는 사람에게 45 ETH의 현상금을 제공하고 있습니다. 복구 프로세스는 전용 스마트 계약에 의해 관리됩니다.
 
-You’ve agreed to help. Although, you only have 0.1 ETH in balance. The devs just won’t reply to your messages asking for more.
+당신은 도움을 주기로 동의했습니다. 하지만 당신의 잔액에는 0.1 ETH밖에 없습니다. 개발자들은 더 많은 자금을 요청하는 당신의 메시지에 답장하지 않습니다.
 
-If only you could get free ETH, at least for an instant.
+아주 잠시라도 무료 ETH를 얻을 수만 있다면 좋으련만.

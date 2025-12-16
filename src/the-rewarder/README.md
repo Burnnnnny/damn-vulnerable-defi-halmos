@@ -1,9 +1,9 @@
 # The Rewarder
 
-A contract is distributing rewards of Damn Valuable Tokens and WETH.
+계약이 Damn Valuable Token과 WETH의 보상을 분배하고 있습니다.
 
-To claim rewards, users must prove they're included in the chosen set of beneficiaries. Don't worry about gas though. The contract has been optimized and allows claiming multiple tokens in the same transaction.
+보상을 청구하려면 사용자는 선택된 수혜자 집합에 포함되어 있음을 증명해야 합니다. 하지만 가스비는 걱정하지 마세요. 계약은 최적화되어 있어 동일한 트랜잭션에서 여러 토큰을 청구할 수 있습니다.
 
-Alice has claimed her rewards already. You can claim yours too! But you've realized there's a critical vulnerability in the contract.
+Alice는 이미 보상을 청구했습니다. 당신도 청구할 수 있습니다! 하지만 당신은 계약에 치명적인 취약점이 있다는 것을 깨달았습니다.
 
-Save as much funds as you can from the distributor. Transfer all recovered assets to the designated recovery account.
+분배기에서 가능한 한 많은 자금을 구하십시오. 복구된 모든 자산을 지정된 복구 계정으로 이체하십시오.
