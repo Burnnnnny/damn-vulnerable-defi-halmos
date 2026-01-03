@@ -5,11 +5,11 @@
 
 ## 서문
 독자는 다음의 이전 글들에 익숙하다고 강력하게 가정합니다:
-1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
-2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
-3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
-4. [Side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
-5. [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)
+1. [Unstoppable](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
+2. [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster)
+3. [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
+4. [Side-entrance](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
+5. [The-rewarder](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)
 
 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다.
 
@@ -125,7 +125,7 @@ function flashLoan(IERC3156FlashBorrower _receiver, address _token, uint256 _amo
     ...
 }    
 ```
-여기서 무슨 일이 일어나고 있냐면: `selfiePool::flashLoan()`에서 우리는 `_receiver`를 매개변수로 전달합니다. 트랜잭션을 심볼릭하게 실행할 때, Halmos는 `_receiver`로서 자신에게 알려진 모든 주소를 무작위 대입하여 각 계약에서 `onFlashLoan()` 함수를 실행하려고 시도합니다. 우리는 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/naive-receiver/README.md#optimizations)에서 비슷한 것을 보았습니다. 하지만 이번에는 설정에 준비된 **IERC3156FlashBorrower** 계약이 없으므로 현재 모든 `flashLoan` 트랜잭션은 **revert**될 운명입니다. 하지만 무섭지 않습니다. [Side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/side-entrance/README.md#callbacks)에서 했던 것처럼 **SymbolicAttacker** 내부에서 그러한 콜백을 만들 수 있다는 것은 명백합니다:
+여기서 무슨 일이 일어나고 있냐면: `selfiePool::flashLoan()`에서 우리는 `_receiver`를 매개변수로 전달합니다. 트랜잭션을 심볼릭하게 실행할 때, Halmos는 `_receiver`로서 자신에게 알려진 모든 주소를 무작위 대입하여 각 계약에서 `onFlashLoan()` 함수를 실행하려고 시도합니다. 우리는 [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/naive-receiver/README.md#optimizations)에서 비슷한 것을 보았습니다. 하지만 이번에는 설정에 준비된 **IERC3156FlashBorrower** 계약이 없으므로 현재 모든 `flashLoan` 트랜잭션은 **revert**될 운명입니다. 하지만 무섭지 않습니다. [Side-entrance](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/side-entrance/README.md#callbacks)에서 했던 것처럼 **SymbolicAttacker** 내부에서 그러한 콜백을 만들 수 있다는 것은 명백합니다:
 ```solidity
 function onFlashLoan(address initiator, address token,
                     uint256 amount, uint256 fee,
@@ -218,13 +218,13 @@ Counterexample:
     ...
 Killed
 ```
-우리가 익숙한 가짜 [permit-transferFrom](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/truster/README.md#counterexamples-analysis) 반례를 고려하지 않는다면, 해결책은 여전히 발견되지 않았습니다. 게다가 메모리 부족(Out-of-memory)으로 완료되지도 않았습니다. 최적화가 필요합니다!
+우리가 익숙한 가짜 [permit-transferFrom](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/truster/README.md#counterexamples-analysis) 반례를 고려하지 않는다면, 해결책은 여전히 발견되지 않았습니다. 게다가 메모리 부족(Out-of-memory)으로 완료되지도 않았습니다. 최적화가 필요합니다!
 
 ### 작은 업데이트
 이 글을 쓰는 시점에서 "메모리 부족" 문제는 [수정](https://github.com/a16z/halmos/issues/425)되었습니다. 이제 메모리가 경로 수 증가에 따라 선형적으로 증가하지 않으므로, 적어도 어느 정도 시간 내에 2개의 심볼릭 트랜잭션을 완료할 수 있습니다. 그러나 12시간 정도 실행했지만 반례는 여전히 발견되지 않았습니다.
 
 ## 최적화 및 휴리스틱
-우리는 이미 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#optimizations)에서 경로 폭발 한계에 부딪혔습니다. 그리고 이 한계를 우회하기 위해 적용할 수 있는 몇 가지 최적화 및 휴리스틱 방향을 이미 강조할 수 있습니다:
+우리는 이미 [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#optimizations)에서 경로 폭발 한계에 부딪혔습니다. 그리고 이 한계를 우회하기 위해 적용할 수 있는 몇 가지 최적화 및 휴리스틱 방향을 이미 강조할 수 있습니다:
 1. 결과에 영향을 미치지 않는 것으로 알려진 "확실한" 최적화를 추가합니다.
 2. 일부 시나리오는 잘라낼 수 있지만 전체 코드 커버리지는 줄이지 않는 휴리스틱을 추가합니다.
 3. 엔진의 작업을 더 쉽게 만들기 위해 불변 조건을 단순화/변경합니다.
@@ -547,7 +547,7 @@ DVD V3와 V4에서 챌린지의 본질은 동일한 버그와 함께 유지되�
 3. `ERC20Votes::delegate()` 대신 `snapshot()`을 통한 로직이 사용됩니다.
 
 ### 아이디어 개요
-아이디어를 간략하게 설명하자면: 공격자가 호출할 수 있는 소수의 함수가 추상화 없이 코드에 직접 설명되어 있는 "괴물 같은" [push-pop-use](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/the-rewarder/README.md#analysis-of-the-limits-of-echidna) 패턴이 있습니다. 처음 몇 번의 호출은 공격 트랜잭션에 의해 호출될 함수들을 "설정(setup)"하는 것입니다.
+아이디어를 간략하게 설명하자면: 공격자가 호출할 수 있는 소수의 함수가 추상화 없이 코드에 직접 설명되어 있는 "괴물 같은" [push-pop-use](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/the-rewarder/README.md#analysis-of-the-limits-of-echidna) 패턴이 있습니다. 처음 몇 번의 호출은 공격 트랜잭션에 의해 호출될 함수들을 "설정(setup)"하는 것입니다.
 ### 시나리오 수 감소
 Halmos 솔루션과 마찬가지로 Echidna 기반 솔루션은 다루는 시나리오의 수를 줄였습니다. 그러나 중요한 차이점이 있습니다: 기본적으로 그들은 다음 대상 함수들만 고려합니다:
 ```solidity
@@ -659,7 +659,7 @@ function createPayload(
     ++payloadsPushedCounter;
 }
 ```
-[Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster#echidna)의 프랑켄슈타인과 약간 비슷하지 않나요? 다시 한 번 말씀드리지만, `executeAction` 내부에서 실행될 수 있는 단 2개의 함수만 여기서 고려되었으며, 함수는 이미 매우 거대합니다. 그리고 이러한 함수의 매개변수는 추상적이지 않고 하드코딩되어 있습니다. 이러한 배경에서 Halmos의 사용 편의성은 명백합니다.
+[Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster#echidna)의 프랑켄슈타인과 약간 비슷하지 않나요? 다시 한 번 말씀드리지만, `executeAction` 내부에서 실행될 수 있는 단 2개의 함수만 여기서 고려되었으며, 함수는 이미 매우 거대합니다. 그리고 이러한 함수의 매개변수는 추상적이지 않고 하드코딩되어 있습니다. 이러한 배경에서 Halmos의 사용 편의성은 명백합니다.
 ### 액션 호출
 설정이 완료되면 퍼저는 이 모든 함수를 실행할 수 있는 능력을 갖게 됩니다. `receiveTokens()`에는 이를 위한 기능이 있습니다:
 ```solidity
@@ -808,4 +808,4 @@ function executeAction() public {
 2. 퍼징은 `flashLoan`을 처리하는 데 정말 능숙합니다. 하지만 함수 호출을 추상화할 때, Echidna는 Halmos에 비해 어려움을 겪습니다. 이런 경우에는 Halmos가 훨씬 더 선호됩니다.
 3. Halmos vs Echidna 대결에서 Halmos는 설정의 편리함과 추상적 호출 처리 능력 때문에 승리합니다. 하지만 Echidna 역시 적절한 힌트와 설정이 주어진다면 강력한 도구가 될 수 있습니다.
 ## 다음 단계는?
-다음 챌린지는 [Compromised](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/compromised)입니다.
+다음 챌린지는 [Compromised](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/compromised)입니다.

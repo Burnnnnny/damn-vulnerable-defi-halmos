@@ -5,9 +5,9 @@
 
 ## 서문
 독자는 다음의 이전 글들에 익숙하다고 강력하게 가정합니다:
-1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
-2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
-3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
+1. [Unstoppable](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
+2. [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster)
+3. [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
 
 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다.
 
@@ -68,7 +68,7 @@ function _isSolved() private view {
     assertEq(recovery.balance, ETHER_IN_POOL, "Not enough ETH in recovery account");
 }
 ```
-이번에는 완전히 반대되는 확인을 하지는 않을 것입니다. 대신, 이전 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#a-simplified-invariant)에서 배운 교훈을 고려하여, 먼저 어떤 버그라도 찾아볼 것입니다. 복구(recovery)에 대한 조건을 제거하고 풀을 어느 정도라도 비울 수 있는지 알아봅시다:
+이번에는 완전히 반대되는 확인을 하지는 않을 것입니다. 대신, 이전 [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#a-simplified-invariant)에서 배운 교훈을 고려하여, 먼저 어떤 버그라도 찾아볼 것입니다. 복구(recovery)에 대한 조건을 제거하고 풀을 어느 정도라도 비울 수 있는지 알아봅시다:
 ```solidity
 function _isSolved() private view {
     assert(address(pool).balance >= ETHER_IN_POOL);
@@ -361,7 +361,7 @@ function execute() external payable override {
 }
 ...
 ```
-우리는 어떤 함수가 어떤 매개변수로 호출될 수 있는지 명시적으로 나타냅니다. 분명히, 더 큰 설정이 있었다면 이 코드는 훨씬 더 "비대해졌을" 것입니다. 우리는 이미 [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster#echidna)에서 이와 비슷한 것을 보았습니다.
+우리는 어떤 함수가 어떤 매개변수로 호출될 수 있는지 명시적으로 나타냅니다. 분명히, 더 큰 설정이 있었다면 이 코드는 훨씬 더 "비대해졌을" 것입니다. 우리는 이미 [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster#echidna)에서 이와 비슷한 것을 보았습니다.
 
 이제 Halmos:
 ```solidity
@@ -381,4 +381,4 @@ Halmos 기반 코드가 그러한 경우에 대해 더 나은 추상화를 제�
 2. 테스트를 특정 계약에 맞게 조정하는 것은 좋은 생각입니다. 예를 들어, 이 챌린지에서는 네이티브 **ETH**를 사용하도록 조정했습니다. 여기서 또한 주목할 가치가 있는 것은, (**ETH**를 보내고 받을 수 있는 능력을 갖춘) 이러한 "고급" **SymbolicAttacker**는 물론 이전 챌린지에도 적용될 수 있다는 것입니다. 그러나 미래에는 솔버와 반례에 부하를 주지 않기 위해 **ETH**와 관련된 챌린지에서만 이 확장을 사용할 것입니다.
 3. 우리는 이전에 내린 결론을 다시 확인합니다: 작은 설정의 경우, 트랜잭션 추상화를 사용해야 하더라도 퍼징은 정말 매우 효과적인 도구인 것 같습니다. 그러나 퍼징 엔진에는 편리한 추상화 메커니즘이 없으므로, 대상 계약이 추상적 호출의 일부 로직에 연결되어 있다면 Halmos가 훨씬 더 편리하고 강력해 보입니다.
 ## 다음 단계는?
-다음 챌린지는 [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)입니다.
+다음 챌린지는 [The-rewarder](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)입니다.

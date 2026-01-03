@@ -5,13 +5,13 @@
 
 ## 서문
 독자는 다음 문제를 해결하는 이전 글들에 익숙하다고 강력하게 가정합니다:
-1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
-2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
-3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
-4. [Side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
-5. [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)
-6. [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie)
-7. [Backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/backdoor)
+1. [Unstoppable](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
+2. [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster)
+3. [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
+4. [Side-entrance](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
+5. [The-rewarder](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)
+6. [Selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie)
+7. [Backdoor](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/backdoor)
 
 주요 아이디어들이 여기서 대부분 반복되므로 다시 다루지 않을 것입니다.
 
@@ -185,7 +185,7 @@ function _isSolved() private view {
 
 ## 커버리지 개선
 ### SymbolicAttacker 콜백 처리
-지금까지 우리는 타겟 계약이 **SymbolicAttacker**에게 심볼릭 `call`을 다시 하는 시나리오를 기본적으로 고려하지 않았습니다. 하지만 [side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/side-entrance/README.md#callbacks), [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md#onflashloan) 및 [backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/backdoor/README.md#delegatecall) 챌린지의 예에서 알 수 있듯이, 이것은 공격자가 제어하는 계약으로 제어권이 다시 넘어가는 꽤 일반적인 시나리오입니다.
+지금까지 우리는 타겟 계약이 **SymbolicAttacker**에게 심볼릭 `call`을 다시 하는 시나리오를 기본적으로 고려하지 않았습니다. 하지만 [side-entrance](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/side-entrance/README.md#callbacks), [selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md#onflashloan) 및 [backdoor](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/backdoor/README.md#delegatecall) 챌린지의 예에서 알 수 있듯이, 이것은 공격자가 제어하는 계약으로 제어권이 다시 넘어가는 꽤 일반적인 시나리오입니다.
 
 따라서 이제 **SymbolicAttacker**에 특별한 `fallback()`을 추가하여 다른 계약으로부터의 호출을 처리할 수 있도록 하겠습니다:
 ```solidity
@@ -387,7 +387,7 @@ function execute(
 ```
 우리는 전달된 인수로 `bytes[] calldata dataElements`가 사용되는 것을 즉시 알아차립니다. 이것은 이미 심볼릭 오프셋 오류로 이어지는 "고전적인" 패턴입니다. 따라서 언제나 그렇듯이, 우리는 내부적으로 심볼릭 바이트를 직접 생성하고 원래 바이트 사용을 우리가 생성한 것으로 대체합니다.
 
-하지만 이러한 대체로 넘어가기 전에, 로컬 `operation` 등록 시스템에 대해 이야기할 가치가 있습니다. 우리는 이미 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#executeaction)에서 스케줄된 `actions` 기능을 접했습니다. 거기서는 각 `action`에 순서대로 번호가 부여되었습니다. 하지만 "Climber"는 다른 시스템을 사용합니다: 우리는 먼저 `schedule()`에 `targets`, `values`, `bytes`, `salt`의 배열을 전달해야 합니다. 이 모든 것이 연결되고 해시됩니다:
+하지만 이러한 대체로 넘어가기 전에, 로컬 `operation` 등록 시스템에 대해 이야기할 가치가 있습니다. 우리는 이미 [selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie#executeaction)에서 스케줄된 `actions` 기능을 접했습니다. 거기서는 각 `action`에 순서대로 번호가 부여되었습니다. 하지만 "Climber"는 다른 시스템을 사용합니다: 우리는 먼저 `schedule()`에 `targets`, `values`, `bytes`, `salt`의 배열을 전달해야 합니다. 이 모든 것이 연결되고 해시됩니다:
 ```solidity
 function getOperationId(
     address[] calldata targets,
@@ -442,7 +442,7 @@ if (getOperationState(id) != OperationState.ReadyForExecution) {
 다음은 이 문제를 해결할 수 있는 몇 가지 아이디어입니다:
 1. `createCalldata()`의 심볼릭 바이트를 수정하여 정적 크기를 가지고 끝에 패딩으로 `0s`를 출력하도록 합니다(이에 대해서는 나중에 자세히 설명).
 2. 잠재적인 프록시 **구현** 변경 상황을 별도로 처리합니다.
-3. `operations` 기능 자체를 리팩토링하여 심볼릭 분석에 더 "친화적"으로 만듭니다([backdoor](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/backdoor#ownerisnotabeneficiary-issue)의 심볼릭 매핑 키에 "안녕"하세요).
+3. `operations` 기능 자체를 리팩토링하여 심볼릭 분석에 더 "친화적"으로 만듭니다([backdoor](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/backdoor#ownerisnotabeneficiary-issue)의 심볼릭 매핑 키에 "안녕"하세요).
 
 이들 모두 존재할 권리가 있으며 잠재적으로 이 문제를 해결하는 데 사용될 수 있습니다. 그러나 `id` 계산 원리를 약간 변경하는 것이 더 쉽습니다: 전체 바이트 배열을 연결하는 대신 각 바이트 배열의 함수 선택자(selector)만 연결해 볼 수 있습니다. 이 선택자는 항상 `4` 바이트의 정적 크기이므로, `execute()`에서 그러한 주소 집합과 해당 함수가 등록되었는지 확인할 수 있습니다(이러한 함수에 대한 특정 매개변수 없이). 물론 우리는 검증의 단순화가 잘못된 반례로 이어질 수 있다는 점을 고려합니다. 하지만 제 생각에 이것은 수익성 있는 절충안이 될 것입니다.
 
@@ -599,7 +599,7 @@ function execute(
 
 ## 심볼릭 트랜잭션 수 확장
 ### 확장할 곳
-하나의 심볼릭 공격 트랜잭션이 있는 설정에서는 Halmos가 반례를 찾지 못했습니다. 따라서 우리는 심볼릭 공격 트랜잭션의 수를 늘리는 일반적인 확장을 수행합니다. [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#expand-onflashloan)에서 알 수 있듯이, `SymbolicAttacker::attack()`만이 심볼릭 트랜잭션의 수를 확장할 수 있는 유일한 곳은 아닙니다. 현재 설정에는 확장이 가능한 곳이 적어도 3곳 있습니다:
+하나의 심볼릭 공격 트랜잭션이 있는 설정에서는 Halmos가 반례를 찾지 못했습니다. 따라서 우리는 심볼릭 공격 트랜잭션의 수를 늘리는 일반적인 확장을 수행합니다. [Selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie#expand-onflashloan)에서 알 수 있듯이, `SymbolicAttacker::attack()`만이 심볼릭 트랜잭션의 수를 확장할 수 있는 유일한 곳은 아닙니다. 현재 설정에는 확장이 가능한 곳이 적어도 3곳 있습니다:
 1. 실제로 `SymbolicAttacker::attack()`:
     ```solidity
     function attack() public {
@@ -868,7 +868,7 @@ halmos_selector_bytes4_9e9a490_92 = updateDelay
 여기서 무엇을 결론지을 수 있을까요? 심볼릭 테스트가 약간 "해킹적"으로 보이고 속도와 성능을 위해 가짜 반례를 수동으로 필터링해야 한다는 사실을 감내할 의향이 있다면: 테스트에서 유효성 검사를 단순화할 수 있습니다. 그렇지 않다면 더 "깨끗한" 접근 방식을 찾는 것이 좋습니다.
 
 ### keccak256 맵 키 처리
-다음 단계로 넘어가기 전에, 심볼릭 분석의 맥락에서 Halmos가 여기서 암호화를 어떻게 처리했는지에 대해 몇 마디 할 가치가 있습니다. 사실 [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster#counterexamples-analysis)와 [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder#dealing-with-merkle-functions)에서 암호화에 대한 약한 처리를 본 후, Halmos로 작업할 때 암호화를 **전혀** 피해야 한다는 인상을 받았습니다. 하지만 이 챌린지는 Halmos가 여기서 꽤 중요한 일을 해냈기 때문에 제 생각을 조금 바꾸게 만들었습니다.
+다음 단계로 넘어가기 전에, 심볼릭 분석의 맥락에서 Halmos가 여기서 암호화를 어떻게 처리했는지에 대해 몇 마디 할 가치가 있습니다. 사실 [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster#counterexamples-analysis)와 [The-rewarder](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder#dealing-with-merkle-functions)에서 암호화에 대한 약한 처리를 본 후, Halmos로 작업할 때 암호화를 **전혀** 피해야 한다는 인상을 받았습니다. 하지만 이 챌린지는 Halmos가 여기서 꽤 중요한 일을 해냈기 때문에 제 생각을 조금 바꾸게 만들었습니다.
 
 `schedule()`에서 `operations`는 bytes32 키 (`id`)로 저장됩니다:
 ```solidity
@@ -912,7 +912,7 @@ Halmos 리포지토리의 회귀 테스트를 분석하여 구현된 휴리스�
 등등.
 
 ## preload 구현
-우리는 `PROPOSER_ROLE` 권한을 잠금 해제하고 새로운 시나리오를 테스트하기 위해 preload([selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload)에서처럼)를 추가할 것입니다.
+우리는 `PROPOSER_ROLE` 권한을 잠금 해제하고 새로운 시나리오를 테스트하기 위해 preload([selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload)에서처럼)를 추가할 것입니다.
 ```solidity
 function check_climber() public checkSolvedByPlayer {
     ...

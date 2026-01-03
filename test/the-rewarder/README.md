@@ -5,10 +5,10 @@
 
 ## 서문
 독자는 다음의 이전 글들에 익숙하다고 강력하게 가정합니다:
-1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
-2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
-3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
-4. [Side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
+1. [Unstoppable](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
+2. [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster)
+3. [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
+4. [Side-entrance](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
 
 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다.
 
@@ -301,7 +301,7 @@ function processProof(bytes32[] memory proof, bytes32 leaf) internal pure return
 분명히, 심볼릭 분석 방법을 사용하여 그러한 `inputClaim.proof`를 찾을 수 없습니다. 이는 말 그대로 해시 암호화를 깨는 것을 의미하기 때문입니다.
 따라서 Halmos는 유효한 `proof`를 찾지 못하여 제대로 작동하지 않을 것입니다.
 
-하지만 방법이 있습니다. 우리는 이미 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#optimizations)에서 암호학적 검사를 접했습니다.
+하지만 방법이 있습니다. 우리는 이미 [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver#optimizations)에서 암호학적 검사를 접했습니다.
 거기서 우리는 암호학적 검증을 완전히 제거했지만, 입력된 데이터가 정확하다는 것을 명확히 표시했습니다. 여기서도 비슷한 작업을 수행할 것입니다: 암호학적 검증을 제거하지만, `msg.sender`에 대해 올바른 `amount`를 전송했다고 가정합니다(이것이 이 암호학적 검증의 목적입니다):
 ```solidity
 ...
@@ -671,4 +671,4 @@ echidna_testSolved: failed!💥
 2. 암호학적 검사가 포함된 테스트를 구성할 때 매우 효과적인 기술이 있습니다: 암호학을 전혀 확인하지 않고 데이터가 올바르게 입력되었다고 명시적으로 가정하는 것입니다.
 3. Halmos와 Echidna가 이 챌린지에 어떻게 대처했는지 비교하면, 두 도구 모두 꽤 잘 해냈다고 말할 수 있습니다. 하지만 제 생각에는 Halmos가 조금 더 편리했습니다 - 계약 준비의 모든 단계가 명확하고 계획적이었으며, 도구 자체가 경고를 통해 대상 계약을 변경하는 방법에 대한 힌트를 제공했습니다. 반면에 Echidna의 경우, 코드 커버리지의 한계를 수동으로 찾아야 했고, 퍼징이 2개의 `inputClaims`가 있는 경우를 커버하도록 강제하기 위해 가장 명확하지 않은 기술을 사용해야 했습니다.
 ### 다음 단계는?
-다음 챌린지는 [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md)입니다.
+다음 챌린지는 [Selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/blob/master/test/selfie/README.md)입니다.

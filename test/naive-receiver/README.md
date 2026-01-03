@@ -4,7 +4,7 @@
 이 글에서는 halmos 0.2.1.dev19+g4e82a90 버전이 사용되었습니다.
 
 ## 서문
-독자는 [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable)과 [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster) 해결에 관한 이전 글들에 익숙하다고 강력하게 가정합니다. 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다.
+독자는 [Unstoppable](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/unstoppable)과 [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster) 해결에 관한 이전 글들에 익숙하다고 강력하게 가정합니다. 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다.
 
 ## 준비
 ### 공통 필수 조건
@@ -235,7 +235,7 @@ Symbolic test result: 1 passed; 0 failed; time: 59.01s
 ```
 완벽합니다. 경로 수가 증가했고 더 이상 경고가 없습니다. 하지만 불변 조건은 아직 깨지지 않았으므로 다음 단계로 진행해야 합니다.
 ## 트랜잭션 늘리기
-우리는 이미 한 번의 트랜잭션으로 문제를 해결할 수 없다면 여러 트랜잭션으로 해결을 시도할 수 있다는 것을 알고 있습니다. 우리는 이 방향으로 가고 있습니다. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster#another-transaction)와 비슷하게 **SymbolicAttacker**에 트랜잭션을 하나 더 추가해 봅시다:
+우리는 이미 한 번의 트랜잭션으로 문제를 해결할 수 없다면 여러 트랜잭션으로 해결을 시도할 수 있다는 것을 알고 있습니다. 우리는 이 방향으로 가고 있습니다. [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster#another-transaction)와 비슷하게 **SymbolicAttacker**에 트랜잭션을 하나 더 추가해 봅시다:
 ```solidity
 function execute_tx() private {
     address target = svm.createAddress("target");
@@ -697,4 +697,4 @@ echidna_isWorking: passing
 4. 언제 `svm.CreateCalldata()`를 사용하는 것이 더 좋고 언제 `svm.createBytes()`를 사용하는 것이 더 좋은지 이해하는 것이 중요합니다. 각각 고유한 적용 분야가 있습니다.
 5. `withdraw()`->`_msgSender()` 함수에서 `svm.createBytes()`를 사용해야 한다는 강력한 힌트를 주었음에도 불구하고, Halmos는 Echidna나 Foundry와 달리 버그를 찾기 위해 원시 콜데이터를 처리하는 작업을 훌륭하게 수행했습니다. Naive-receiver의 새 버전은 퍼징으로 완전히 해결되지 않습니다.
 ## 다음 단계는?
-다음 DVD 챌린지는 [Side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)입니다.
+다음 DVD 챌린지는 [Side-entrance](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)입니다.

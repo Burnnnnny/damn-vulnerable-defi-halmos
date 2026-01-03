@@ -3,12 +3,12 @@
 halmos 0.2.4.dev6+g606ac51
 ## 서문
 독자가 다음의 이전 문제 해결에 대한 글들에 익숙하다고 강력히 가정합니다:
-1. [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
-2. [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster)
-3. [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
-4. [Side-entrance](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
-5. [The-rewarder](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)
-6. [Selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie)
+1. [Unstoppable](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/unstoppable) 
+2. [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster)
+3. [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver)
+4. [Side-entrance](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/side-entrance)
+5. [The-rewarder](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/the-rewarder)
+6. [Selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie)
 
 여기서 주요 아이디어는 대부분 반복되므로 다시 다루지 않을 것입니다.
 
@@ -101,7 +101,7 @@ function _isSolved() private view {
     }
 }
 ```
-그리고 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#invariants)의 접근 방식을 고려하여, `allowance`에 대해 또 다른 다소 명백한 불변 조건을 추가할 것입니다:
+그리고 [selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie#invariants)의 접근 방식을 고려하여, `allowance`에 대해 또 다른 다소 명백한 불변 조건을 추가할 것입니다:
 ```solidity
 ...
 address symbolic_spender = svm.createAddress("symbolic_spender");
@@ -616,7 +616,7 @@ $ halmos --solver-timeout-assertion 0 --function check_backdoor --loop 100
 
 하지만 반면에, 연산 속도는 상당히 감소했습니다. 제 머신에서는 초당 `~29000` 연산에서 `~8000`으로 떨어졌습니다. 그렇기 때문에 더 올바른 해결책은 작업 머신의 타임아웃 값을 조정하여, 연산 속도를 크게 늦추지 않으면서 실행마다 Halmos가 안정적으로 작동하도록 하는 것입니다.
 
-저는 어쨌든 Halmos의 기능을 보여주기 위해 비용이 많이 들지만 안정적인 해결책으로 `0`을 사용할 것입니다. 하지만 다시 말하지만, 이 옵션은 현명하게 사용해야 합니다. 예를 들어, 이전 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload) 챌린지 테스트를 이 매개변수와 함께 실행하면 성능이 거의 완전히 죽고 몇 시간 동안 해결책을 찾지 못합니다.
+저는 어쨌든 Halmos의 기능을 보여주기 위해 비용이 많이 들지만 안정적인 해결책으로 `0`을 사용할 것입니다. 하지만 다시 말하지만, 이 옵션은 현명하게 사용해야 합니다. 예를 들어, 이전 [selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie#symbolicattacker-preload) 챌린지 테스트를 이 매개변수와 함께 실행하면 성능이 거의 완전히 죽고 몇 시간 동안 해결책을 찾지 못합니다.
 ### 테스트 중 create2 사용
 이 챌린지에서 우리는 독특한 특징을 가지고 있습니다: 테스트의 로직은 테스트 중에 새로운 컨트랙트가 생성된다는 사실에 기반합니다.
 ```soliidty
@@ -711,7 +711,7 @@ function createProxyWithCallback(...) public {
 }
 ...
 ```
-따라서 `get_concrete_from_symbolic_optimized`를 사용하여 재귀를 피하는 일반적인 방법은 우리에게 적합하지 않습니다. `createProxyWithNonce`는 `createProxyWithCallback` 내부에서 호출되므로, [naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/selfie/test/naive-receiver#proxy-heuristics)와 동일한 접근 방식을 사용하여, 전체 코드 커버리지를 희생하지 않으면서 `createProxyWithNonce`에 대한 직접적인 심볼릭 호출 시나리오를 단순히 잘라낼 수 있습니다. 우리는 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#solid-optimizations)에서 이미 익숙한 `add_banned_function_selector()`를 통해 이 함수들을 금지함으로써 이를 수행할 것입니다:
+따라서 `get_concrete_from_symbolic_optimized`를 사용하여 재귀를 피하는 일반적인 방법은 우리에게 적합하지 않습니다. `createProxyWithNonce`는 `createProxyWithCallback` 내부에서 호출되므로, [naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/selfie/test/naive-receiver#proxy-heuristics)와 동일한 접근 방식을 사용하여, 전체 코드 커버리지를 희생하지 않으면서 `createProxyWithNonce`에 대한 직접적인 심볼릭 호출 시나리오를 단순히 잘라낼 수 있습니다. 우리는 [selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie#solid-optimizations)에서 이미 익숙한 `add_banned_function_selector()`를 통해 이 함수들을 금지함으로써 이를 수행할 것입니다:
 ```solidity
 function setUp() public {
     ...
@@ -736,7 +736,7 @@ function execute_tx(string memory target_name) private {
     vm.assume(snap0 != snap1);
 }
 ```
-이 개선이 얼마나 강력한지 이해하기 위해, [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster) 실험에서 해결책을 찾는 데 5배의 속도 향상을 보였다고 말하는 것으로 충분합니다.
+이 개선이 얼마나 강력한지 이해하기 위해, [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster) 실험에서 해결책을 찾는 데 5배의 속도 향상을 보였다고 말하는 것으로 충분합니다.
 ### simulateAndRevert 함수
 **safe-smart-account**의 이 함수를 살펴봅시다:
 ```solidity
@@ -892,7 +892,7 @@ Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 9.43ms (1.69ms CPU 
 성공!
 
 ## 퍼징은?
-전통에 따르면, 퍼징 엔진이 현재 문제에서 작동하도록 "네모난 못을 둥근 구멍에 맞추려는" 노력이 있어야 합니다. 하지만 사실, 우리는 이것에서 어떤 "학문적 새로움"도 찾을 것 같지 않습니다. 우리는 이미 높은 수준의 추상화가 있는 작업에서 Echidna가 어떻게 행동하는지, 그리고 [selfie](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/selfie#fuzzing-vs-selfie)의 예에서 문제를 해결하기 위해 준비하는 것이 얼마나 부자연스럽고 불편하며 심지어 "사기"처럼 보이는지 보았습니다. 따라서 이 글에서는 저 자신이나 독자를 고문하지 않을 것이며, 퍼징을 통한 해결책 찾기를 포기할 것입니다. 하지만 퍼징을 통한 우아한 해결책이 존재한다면 기꺼이 살펴보고 싶습니다. 제 결론이 틀렸다면 기쁠 것입니다 :D.
+전통에 따르면, 퍼징 엔진이 현재 문제에서 작동하도록 "네모난 못을 둥근 구멍에 맞추려는" 노력이 있어야 합니다. 하지만 사실, 우리는 이것에서 어떤 "학문적 새로움"도 찾을 것 같지 않습니다. 우리는 이미 높은 수준의 추상화가 있는 작업에서 Echidna가 어떻게 행동하는지, 그리고 [selfie](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/selfie#fuzzing-vs-selfie)의 예에서 문제를 해결하기 위해 준비하는 것이 얼마나 부자연스럽고 불편하며 심지어 "사기"처럼 보이는지 보았습니다. 따라서 이 글에서는 저 자신이나 독자를 고문하지 않을 것이며, 퍼징을 통한 해결책 찾기를 포기할 것입니다. 하지만 퍼징을 통한 우아한 해결책이 존재한다면 기꺼이 살펴보고 싶습니다. 제 결론이 틀렸다면 기쁠 것입니다 :D.
 
 ## 결론
 1. Halmos는 추상화로 과부하된 컨트랙트의 경우에도 강력한 도구임이 입증되었습니다. 중요한 것은 코드 커버리지를 꼼꼼하게 처리하고 휴리스틱을 통한 최적화를 능숙하게 사용하는 것입니다.
@@ -902,4 +902,4 @@ Suite result: ok. 2 passed; 0 failed; 0 skipped; finished in 9.43ms (1.69ms CPU 
 5. Halmos는 때때로 높은 부하에서 비결정적으로 동작할 수 있습니다. 비낙관적(non-optimistic) 옵션을 사용하면 Halmos가 더 결정적으로 작동하도록 도울 수 있습니다.
 
 ## 다음 챌린지
-이 시리즈의 다음 글은 [climber](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/climber)입니다.
+이 시리즈의 다음 글은 [climber](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/climber)입니다.

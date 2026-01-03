@@ -4,7 +4,7 @@
 이 글에서는 halmos 0.2.1.dev16+g1502e46 버전이 사용되었습니다.
 
 ## 서문
-독자는 [Unstoppable](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/unstoppable)을 해결하는 이전 글에 익숙하다고 강력하게 가정합니다. 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다. 또한 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) 솔루션은 잠시 미루어 두었음을 분명히 해야 합니다. 왜냐하면 "Naive-receiver" 솔루션에 필요한 추가 기술들이 "Truster"에서 설명되기 때문입니다. 독자를 오도하지 않고 너무 앞서 나가지 않기 위해 이러한 순서로 자료를 제시하기로 했습니다.
+독자는 [Unstoppable](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/unstoppable)을 해결하는 이전 글에 익숙하다고 강력하게 가정합니다. 주요 아이디어가 여기에서도 대부분 반복되므로 다시 설명하지 않습니다. 또한 [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) 솔루션은 잠시 미루어 두었음을 분명히 해야 합니다. 왜냐하면 "Naive-receiver" 솔루션에 필요한 추가 기술들이 "Truster"에서 설명되기 때문입니다. 독자를 오도하지 않고 너무 앞서 나가지 않기 위해 이러한 순서로 자료를 제시하기로 했습니다.
 
 ## 아이디어 개요
 이미 알고 있는 지식을 바탕으로, 우리는 다시 **SymbolicAttacker** 계약을 만들어 심볼릭 트랜잭션을 실행하고 이것이 우리가 필요한 공격으로 이어지기를 바랄 것입니다. 하지만 이번에도 이것으로 충분할까요?
@@ -797,4 +797,4 @@ echidna_testSolved: failed!
 5. Foundry와 Echidna에서의 퍼징은 전달된 대상과 해당 데이터에 대한 호출이 있는 계약에서 매우 약한 모습을 보였습니다. 알려진 것에서 대상을 가져오고, 선택자와 필요한 매개변수에서 calldata를 구축하고 실행하는 것이 간단할 것 같았습니다. 하지만 이 도구들은 이것에 대처하지 못했습니다. 아마도 이것이 인터넷에서 퍼징을 사용하여 이 문제에 대한 해결책을 찾지 못한 이유일 것입니다. 퍼징을 위해 이러한 계약을 준비하는 것은 골치 아픈 일처럼 보입니다. 그리고 여기서 Halmos는 매우 편리한 도구임이 입증되었습니다.
 
 ## 다음 단계는?
-이 시리즈의 다음 글은 [Naive-receiver](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) 해결입니다.
+이 시리즈의 다음 글은 [Naive-receiver](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/naive-receiver) 해결입니다.

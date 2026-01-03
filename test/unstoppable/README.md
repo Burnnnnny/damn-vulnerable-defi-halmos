@@ -321,4 +321,4 @@ sender=0x44E97aF4418b7a17AABD8090bEA0A471a366305C addr=[src/DamnValuableToken.so
 5. 사소한 해결책이 있는 꽤 간단한 문제의 경우, 퍼징을 통한 해결책이 훨씬 간단해 보이고 실제로 그렇습니다: 그것을 작성하는 데 Halmos를 통해 해결하는 것보다 10배 적은 시간과 노력이 들었습니다. 그러나, **!!!스포일러 주의!!!**, Halmos는 이어지는 덜 사소한 챌린지들에서 그 위력을 보여줄 것입니다.
 
 ## 다음 단계는?
-이 시리즈의 다음 글은 [Truster](https://github.com/igorganich/damn-vulnerable-defi-halmos/tree/master/test/truster) 크래킹입니다.
+이 시리즈의 다음 글은 [Truster](https://github.com/Burnnnnny/damn-vulnerable-defi-halmos/tree/master/test/truster) 크래킹입니다.
